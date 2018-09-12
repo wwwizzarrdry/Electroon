@@ -1,7 +1,7 @@
 # Electroon
 Mini Roon controller with tray icon built with Electron
 
-1. Edit confog.json
+1. Edit config.json
    change "server_ip" to your Roon core address.
 2. npm install
 3. npm run build
@@ -10,4 +10,4 @@ Mini Roon controller with tray icon built with Electron
 
 I'll upload the executable once I get RoonSettingsApi working.
    
-   
+  
