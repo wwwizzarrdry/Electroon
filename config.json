@@ -1,0 +1,10 @@
+{
+    "server_ip": "192.168.2.113",
+    "server_port": 9100,
+    "roonstate": {
+        "tokens": {},
+        "paired_core_id": ""
+    },
+    "current_zone_id": "",
+    "history": []
+}

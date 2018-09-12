@@ -1,0 +1,39 @@
+{
+  "name": "electroon",
+  "version": "1.0.0",
+  "description": "mini roon controller",
+  "main": "app.js",
+  "scripts": {
+    "start": "electron . --enable-transparent-visuals --disable-gpu",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "browserify roon.js -o roon_bundle.js -t partialify -u xml2js -u ws",
+    "dev": "watchify -d  roon.js -o roon_bundle.js -t partialify -u xml2js -u ws"
+  },
+  "author": "Ian Celing",
+  "license": "ISC",
+  "dependencies": {
+    "@vue/cli": "^3.0.3",
+    "babel-preset-env": "^1.7.0",
+    "babel-preset-stage-2": "^6.24.1",
+    "browserify": "^16.2.2",
+    "node-roon-api": "github:roonlabs/node-roon-api",
+    "node-roon-api-browse": "github:roonlabs/node-roon-api-browse",
+    "node-roon-api-image": "github:roonlabs/node-roon-api-image",
+    "node-roon-api-settings": "github:roonlabs/node-roon-api-settings",
+    "node-roon-api-status": "github:roonlabs/node-roon-api-status",
+    "node-roon-api-transport": "github:roonlabs/node-roon-api-transport",
+    "vue": "^1.0.26",
+    "watchify": "^3.11.0"
+  },
+  "devDependencies": {
+    "babel-preset-es2015": "^6.24.1",
+    "babel-preset-stage-1": "^6.24.1",
+    "babel-preset-stage-3": "^6.24.1",
+    "babelify": "^7.3.0",
+    "browser-sync": "^2.24.7",
+    "electron": "^2.0.8",
+    "electron-screen": "^1.0.3",
+    "minifyify": "^7.3.3",
+    "partialify": "^3.1.6"
+  }
+}

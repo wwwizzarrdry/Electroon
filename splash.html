@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<html>
+    <head>
+        <style>
+        * {user-select: none;font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif}
+        #splash {
+            background: linear-gradient(to top, rgb(122, 28, 21) 25%, rgba(244, 67, 54, 0.9) 100%);
+            border-radius: 10% 10% 10% 10%;
+            box-shadow: 0px 18px 24px -6px #353535;
+            width: 120px;
+            height: 90px;
+            padding-top: 10px;
+            opacity: 0;
+            transition: opacity 3s ease;
+        }
+        </style>
+    </head>
+    <body style="background: rgba(0, 0, 0, 0);">
+        <div id="splash">
+            <center><img src="assets/img/SVG/audio.svg" width="40" alt=""></center>
+            <center style="color: #fff;"><span id="status">Loading</span></center>
+        </div>
+    </body>
+    <script>
+        document.getElementById("splash").style.opacity = 1;
+        // Listen for data from browser process and update splashscreen
+        var ipcRenderer = require("electron").ipcRenderer;
+        ipcRenderer.on("update", function(event, status) {
+            document.getElementById("status").innerText = status;
+        })
+    </script>
+</html>

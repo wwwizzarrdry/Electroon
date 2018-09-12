@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+  <html>
+    <head>
+      <meta charset="UTF-8">
+      <title>Electroon</title>
+      <link rel="stylesheet" href="assets/uikit/css/uikit.almost-flat.min.css">
+      <link rel="stylesheet" href="assets/css/player.css">
+      <link href="assets/fonts/quicksand/quicksand.css" rel="stylesheet">
+      <link href="assets/fonts/md-icons/material-icons.css" rel="stylesheet">
+      <style>body {
+          background-color: transparent;
+          background-repeat: repeat, no-repeat;
+          background-position: center center;
+          background-attachment: fixed;
+          -webkit-background-size: auto, cover;
+           background-size: auto, cover;
+           color: #fff;
+           font-family: 'Quicksand', sans-serif;
+           font-size: 13px;
+           margin: 0;
+           padding: 0;
+           overflow: hidden;
+        }</style>
+    </head>
+    <body style="background-image: url(assets/img/pattern.png), url(assets/img/wallpaper.jpg);">
+        <div id="roonapp" class="music-box" style="height: 350px; width: 325px;"></div>
+        <!-- Required to get jQuery working -->
+        <script>if (typeof module === 'object') {window.module = module; module = undefined;}</script>
+        <script>if (window.module) module = window.module;</script>
+        <!-- Page Scripts-->
+        <script src="assets/js/jquery.min.js"></script>
+        <script src="assets/js/marquee.js"></script>
+        <script src="roon_bundle.js"></script>
+        <script>
+            // Electron
+            const {webFrame,ipcRenderer,remote} = require('electron');
+            let win = remote.getCurrentWindow();
+            let currentZoomFactor = webFrame.getZoomFactor();
+            
+            // Player    
+            var $player;
+            $(function() {
+                $player = $("#roonapp");      
+                remote.app.on('browser-window-blur', () => {
+                    if (remote !== null) {
+                        api.hidePlayer();
+                    }
+                });
+                var api = {
+                    init: function() {
+                        $("#exit-button").click(api.exit());
+                        $("#alwaystop-button").click(api.always_top());
+                        $("#devtools-button").click(api.dev_tools());
+                    },
+                    exit: function() {
+                        win.close(); 
+                        remote.quit();
+                    },
+                    always_top: function() {
+                        var alwaystop = win.isAlwaysOnTop();
+                        win.setAlwaysOnTop(!alwaystop);
+                        $("#alwaystop-button").html((alwaystop ? "flip_to_back" : "flip_to_front"))
+                    },
+                    dev_tools: function() {
+                        win.webContents.openDevTools();
+                    },
+                    showPlayer: function(){
+                        $player.removeClass("hidden");
+                    },
+                    hidePlayer: function(){
+                        $player.addClass("hidden");
+                    },
+                    togglePlayer: function() {
+                        $player.toggleClass("hidden");
+                    },
+                }        
+            });
+        </script>
+    </body>
+  </html>
