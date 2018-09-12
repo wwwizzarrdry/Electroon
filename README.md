@@ -13,7 +13,7 @@ Mini Roon controller with tray icon built with Electron
 
 Windows executable available here::
 
-httpsive.google.com/file/d/1wV_QrnxExuGX00LwB8vzqXoUBBnJgxvf/view?usp=drivesdk
+https://.google.com/file/d/1wV_QrnxExuGX00LwB8vzqXoUBBnJgxvf/view?usp=drivesdk
 
 Or, if you npm install electron-packager, you can use: "npm run package-win-asar" to make an executable. 
 
