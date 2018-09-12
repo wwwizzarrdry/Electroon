@@ -11,6 +11,7 @@ Mini Roon controller with tray icon built with Electron
 5. Authorize extension in Roon
 
 I'll upload the executable once I get RoonSettingsApi working.
+If you npm install electron-packager, you can use: "npm run package-win-asar" to make an executable. 
 
 Not sure how to package with the startup flags, so you'll have to create a shortcut and edit the properties.
 --enable-transparent-visuals --disable-gpu
