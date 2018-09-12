@@ -1,7 +1,10 @@
 const electron = require('electron');
 const {Menu, Tray, ipcMain } = require('electron');
+const nativeImage = require('electron').nativeImage;
 const app = electron.app;
 const BrowserWindow = electron.BrowserWindow;
+
+let image = nativeImage.createFromPath(__dirname+'/assets/img/roon.png')
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
@@ -97,7 +100,7 @@ app.on('ready', () => {
     createWindow();
 
     // Build tray icon
-    tray = new Tray('assets/img/roon.png');
+    tray = new Tray(image);
     contextMenu = Menu.buildFromTemplate([
         {
             label: 'Always On Top', 
