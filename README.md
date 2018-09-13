@@ -8,7 +8,7 @@ Mini Roon controller with tray icon built with Electron
 
 
 ### Windows executable available here:
-!(https://.google.com/file/d/1wV_QrnxExuGX00LwB8vzqXoUBBnJgxvf/view?usp=drivesdk)
+https://drive.google.com/file/d/1wV_QrnxExuGX00LwB8vzqXoUBBnJgxvf/view?usp=sharing
 
 ## Getting Started
 ```
