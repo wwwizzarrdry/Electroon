@@ -1,6 +1,13 @@
 # Electroon
 Mini Roon controller with tray icon built with Electron
 
+## Screenshots
+![Splash](https://github.com/wwwizzarrdry/Electroon/blob/master/splashscreen.PNG)
+
+![App](https://github.com/wwwizzarrdry/Electroon/blob/master/trayapp.PNG)
+
+![Flags](https://github.com/wwwizzarrdry/Electroon/blob/master/flags.PNG)
+
 ## Getting Started
 ```
 1. Edit config.json and
@@ -10,7 +17,7 @@ Mini Roon controller with tray icon built with Electron
 4. npm start
 5. Authorize extension in Roon
 ```
-# If you npm install electron-packager, you can use the following to make an executable. 
+### If you npm install electron-packager, you can use the following to make an executable. 
 *Run it from the project root directory
 ```
 npm run package-win-asar
@@ -22,15 +29,7 @@ Not sure how to package with the startup flags, but on Windows you can edit the 
 --enable-transparent-visuals --disable-gpu
 ```
 
-# Windows executable available here:
-![Zip](https://.google.com/file/d/1wV_QrnxExuGX00LwB8vzqXoUBBnJgxvf/view?usp=drivesdk)
-
-# Screenshots
-![Splash](https://github.com/wwwizzarrdry/Electroon/blob/master/splashscreen.PNG)
-
-![App](https://github.com/wwwizzarrdry/Electroon/blob/master/trayapp.PNG)
-
-![Flags](https://github.com/wwwizzarrdry/Electroon/blob/master/flags.PNG)
-
+### Windows executable available here:
+!(https://.google.com/file/d/1wV_QrnxExuGX00LwB8vzqXoUBBnJgxvf/view?usp=drivesdk)
 
   
