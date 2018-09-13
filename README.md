@@ -6,7 +6,9 @@ Mini Roon controller with tray icon built with Electron
 
 ![App](https://github.com/wwwizzarrdry/Electroon/blob/master/trayapp.PNG)
 
-![Flags](https://github.com/wwwizzarrdry/Electroon/blob/master/flags.PNG)
+
+### Windows executable available here:
+!(https://.google.com/file/d/1wV_QrnxExuGX00LwB8vzqXoUBBnJgxvf/view?usp=drivesdk)
 
 ## Getting Started
 ```
@@ -28,8 +30,5 @@ Not sure how to package with the startup flags, but on Windows you can edit the 
 ```
 --enable-transparent-visuals --disable-gpu
 ```
-
-### Windows executable available here:
-!(https://.google.com/file/d/1wV_QrnxExuGX00LwB8vzqXoUBBnJgxvf/view?usp=drivesdk)
-
+![Flags](https://github.com/wwwizzarrdry/Electroon/blob/master/flags.PNG)
   
