@@ -338,7 +338,7 @@ function update_history(cfg) {
         cfg.my_settings.history.shift(0);   
     };
 
-    if (cfg.my_settings.history.pop().line1 == v.zones[v.current_zone_id].now_playing.three_line.line1) {
+    if (cfg.my_settings.history.length && cfg.my_settings.history.pop().line1 == v.zones[v.current_zone_id].now_playing.three_line.line1) {
         cfg.my_settings.history[cfg.my_settings.history.length - 1].timestamp = ts.valueOf(); 
     } else {
         cfg.my_settings.history.push({            
