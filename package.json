@@ -5,29 +5,29 @@
   "main": "app.js",
   "scripts": {
     "start": "electron . --enable-transparent-visuals --disable-gpu",
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "echo \"No test script specified...\" && exit 1",
     "build": "browserify roon.js -o roon_bundle.js -t partialify -u xml2js -u ws",
     "dev": "watchify -d  roon.js -o roon_bundle.js -t partialify -u xml2js -u ws",
     "package-win-asar": "electron-packager . Electroon --overwrite --asar --platform=win32 --arch=x64 --icon=assets/img/roon.ico --prune=true --out=../packages --version-string.CompanyName=CE --version-string.FileDescription=CE --version-string.ProductName=\"Electroon\"",
     "package-win": "electron-packager . Electroon --overwrite --platform=win32 --arch=x64 --icon=assets/img/roon.ico --prune=true --out=../packages --version-string.CompanyName=CE --version-string.FileDescription=CE --version-string.ProductName=\"Electroon\"",
     "package-mac": "electron-packager . Electroon --overwrite --platform=darwin --arch=x64 --icon=assets/img/roon.png --prune=true --out=packages",
     "package-linux-asar": "electron-packager . Electroon --overwrite --asar --platform=linux --arch=x64 --icon=assets/img/roon.png --prune=true --out=packages",
-    "package-linux": "electron-packager . Electroon --overwrite --platform=linux --arch=x64 --icon=assets/img/roon.png --prune=true --out=packages"    
+    "package-linux": "electron-packager . Electroon --overwrite --platform=linux --arch=x64 --icon=assets/img/roon.png --prune=true --out=packages"
   },
   "author": "Ian Celing",
   "license": "ISC",
   "dependencies": {
-    "@vue/cli": "^3.0.3",
     "babel-preset-env": "^1.7.0",
     "babel-preset-stage-2": "^6.24.1",
     "browserify": "^16.2.2",
+    "browserify-fs": "^1.0.0",
+    "electron-window-state": "^5.0.1",
     "node-roon-api": "github:roonlabs/node-roon-api",
     "node-roon-api-browse": "github:roonlabs/node-roon-api-browse",
     "node-roon-api-image": "github:roonlabs/node-roon-api-image",
-    "node-roon-api-settings": "github:roonlabs/node-roon-api-settings",
     "node-roon-api-status": "github:roonlabs/node-roon-api-status",
     "node-roon-api-transport": "github:roonlabs/node-roon-api-transport",
-    "vue": "^1.0.26",
+    "vue": "^1.0.28",
     "watchify": "^3.11.0"
   },
   "devDependencies": {
@@ -35,9 +35,9 @@
     "babel-preset-stage-1": "^6.24.1",
     "babel-preset-stage-3": "^6.24.1",
     "babelify": "^7.3.0",
-    "browser-sync": "^2.24.7",
     "electron": "^2.0.8",
     "electron-screen": "^1.0.3",
+    "fs": "0.0.1-security",
     "minifyify": "^7.3.3",
     "partialify": "^3.1.6"
   }

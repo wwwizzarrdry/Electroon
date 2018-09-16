@@ -3,7 +3,88 @@
     outline: none;
     user-select: none;
   }
-  
+
+  body {
+    background-color: transparent;
+    background-repeat: repeat, no-repeat;
+    background-position: center center;
+    background-attachment: fixed;
+    -webkit-background-size: auto, cover;
+    background-size: auto, cover;
+    color: #fff;
+    font-family: 'Quicksand', sans-serif;
+    font-size: 13px;
+    margin: 0;
+    padding: 0;
+    min-width: 365px; 
+    min-height: 365px;
+    overflow: hidden;
+  }
+
+  #drag {
+    display: none;
+    position: fixed;
+    top: 2px;
+    left: 2px;
+    width: 366px;
+    height: 331px;
+    min-width: 366px;
+    min-height: 331px;
+    cursor: move;
+    z-index: -100000;
+    -webkit-app-region: drag;
+    background-color: rgba(0,0,0,0.5);
+    background-size: 30px 30px;
+    -webkit-animation: stripes 2s linear infinite;
+    animation: stripes 2s linear infinite;
+    background-image: linear-gradient(-45deg,rgba(255,255,255,.15) 25%,transparent 25%,transparent 50%,rgba(255,255,255,.15) 50%,rgba(255,255,255,.15) 75%,transparent 75%,transparent) !important;
+  }
+  #drag.draggable {
+    display: block;
+    outline: 2px solid #3388ff;
+    z-index: 100000;
+  }
+  .enable-dragging {
+    position: fixed;
+    top: -6px;
+    right: 0px;
+    opacity: 0;
+    cursor: pointer;
+    transition: all 350ms ease;
+  }
+  .enable-dragging:hover {
+    opacity: 1;
+    padding: 3px;
+  }
+
+  .done-dragging {
+    -webkit-app-region: no-drag;
+    position: fixed;
+    opacity: 0;
+    visibility: hidden;
+    bottom: 0px;
+    left: 0px;
+    width: 370px;
+    height: 50px;
+    z-index: -100000;
+    background: #3388ff;
+    color: #ffffff;
+    box-shadow: 0px -20px 100px 50px #38f;
+    cursor: pointer !important;
+    user-select: none;
+    pointer-events: all !important;
+    border: none;
+    transition: all 550ms ease;
+  }
+  .done-dragging:hover {
+    box-shadow: 0px 0px 0px 0px #38f;
+  }
+  #drag.draggable + .done-dragging {
+    opacity: 1;
+    visibility: visible;
+    z-index: 100001;
+  }
+
   .music-box {
     position: relative;
     transform: translate(0%, 0%);
@@ -13,19 +94,36 @@
     border-radius: 3px;
     overflow: hidden;
     background: rgba(0,0,0,0.75);
-    min-height: 350px;
-    min-width: 330px;
+    min-height: 365px;
+    width: 350px;
+    height: 365px;
 }
   .music-box .album {
     position: relative;
     height: 207px;
+    background: url(../img/SVG/rings.svg);
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: contain;
+    background-color: #111;
+  }
+  .album:before {
+    content: "Awaiting your orders, Captain...";
+    position: absolute;
+    width: auto;
+    margin: auto 0;
+    top: 170px;
+    left: 15px;
+  }
+  .album.nowplaying:before {
+    content: "" !important;
   }
   .music-box .album .photo {
     background: url(assets/icons/roonbg.png) no-repeat 100% 100%;
     background-size: cover;
     width: 100%;
-    min-height: 205px;
-    height: 205px;
+    min-height: 207px;
+    height: 207px;
     filter: contrast(0.5) brightness(0.8) sepia(0.4) saturate(0.8);
   }
   .music-box .album .photo + img {
@@ -51,8 +149,8 @@
     background-color: rgba(0, 0, 0, 0.55);
     width: 100%;
     height: 60px;
-    position: relative;
-    bottom: 60px;
+    position: absolute;
+    bottom: 0px;
   }
   .music-box .album .infos .song {
     padding: 10px 0px 0px 10px;
@@ -67,6 +165,7 @@
     max-width: 200px;
   }
   .line3{
+    margin-top: 12px;
     max-width: 175px;
   }
   .music-box .album .infos .song span, .music-box .album .infos .song small {
@@ -161,6 +260,11 @@
     position: relative;
     padding: 10px 0;
     overflow: hidden;
+    cursor: pointer;
+    transition: all 550ms ease; 
+  }
+  .music-box .dashboard .player .time-rail:hover {
+    background: rgba(51, 136, 255, 0.11);
   }
   .music-box .dashboard .player .time-rail .thumb, .music-box .dashboard .player .time-rail .track {
     position: absolute;
@@ -237,7 +341,7 @@
     font-size: 1.5em;
     width: 35px;
     height: 35px;
-    line-height: 47px;
+    line-height: 49px;
 }
   .music-box .dashboard .action-button a.play-pause.active {
     border-color: #38f;
@@ -344,3 +448,27 @@
   .music-box .lists ul li:hover {
     background-color: rgba(70, 50, 57, 0.3);
   }
+  .box {
+    height: 30px; 
+    position: relative; 
+    top: 0px; 
+    left: 80px;
+  }
+
+  @-webkit-keyframes stripes {
+    0% {
+        background-position: 0 0
+    }
+    100% {
+        background-position: 30px 0
+    }
+}
+
+@keyframes stripes {
+    0% {
+        background-position: 0 0
+    }
+    100% {
+        background-position: 30px 0
+    }
+}
