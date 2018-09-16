@@ -1,0 +1,102 @@
+
+<html>
+    <head>
+        <style>
+            body {
+                margin: 0px;
+                background: #262626;
+            }
+            webview {
+                display: inline-flex;
+                width: 100%;
+                height: 100%;
+                min-width: 100%;
+                min-height: 100%;
+            }
+            webview.hide {
+                visibility: hidden;
+            }
+            .overlay{
+                position: fixed;
+                cursor: wait;
+                top: 0;
+                left: 0;
+                height: 100%;
+                width: 100%;
+                min-width: 100%;
+                min-height: 100%;
+                background: url(assets/img/SVG/puff.svg);
+                background-position: center;
+                background-repeat: no-repeat;
+                background-size: auro;
+                background-color: rgba(0,0,0,0.75);
+                z-index: 1;
+            }
+            nav {
+                position: fixed;
+                width: 100%;
+                padding: 0 15px;
+                margin: 0;
+                background: #151515;
+                padding: 5px;
+            }
+            nav a {
+                line-height: 34px;
+                padding: 5px;
+                font-size: 18px;
+                background: #151515;
+                color: #f0f0f0;
+                font-family: Arial;
+                text-decoration: none;
+            }
+            nav a img {
+                width: 18px;
+                height: 18px;
+                float: left;
+                margin: 5px 5px;
+                border-radius: 50%;
+                border: 2px solid #fff;
+            }
+        </style>
+    </head>
+    <body>
+        <nav>
+            <a href="https://app.plex.tv/desktop"><img src="assets/img/plex.png"/></a>
+            <a href="https://www.last.fm/"><img src="assets/img/lastfm.png"/></a>
+            <a href="https://www.youtube.com/"><img src="assets/img/youtube.png"/></a>
+            <a href="https://www.music.youtube.com/"><img src="assets/img/youtubemusic.png"/></a>
+            <a href="https://play.google.com/music/listen?authuser"><img src="assets/img/googlemusic.png"/></a>
+            <a href="https://www.spotify.com/"><img src="assets/img/spotify.png"/></a>
+            <a href="https://tidal.com/"><img src="assets/img/tidal.png"/></a>
+            <a href="https://www.pandora.com/"><img src="assets/img/pandora.png"/></a>
+            <a href="ttps://soundcloud.com/stream"><img src="assets/img/soundcloud.png"/></a>
+        </nav>
+        <webview id="website" src="https://source.unsplash.com/daily?music/1920x1080" partition="persist:roon" autosize nodeintegration plugins></webview>
+        <span class="overlay"></span>
+        <script>
+            onload = () => {
+
+              const webview = document.querySelector('webview');
+              //const overlay = document.querySelector('.overlay');
+
+              document.querySelector("a").addEventListener('click', function(event){
+                  event.preventDefault();
+                  document.getElementById('website').src = this.getAttribute("href");
+              });
+
+              webview.addEventListener('dom-ready', () => {
+                overlay.style.zIndex = -1000;
+              });
+              const loadstart = () => {
+                overlay.style.zIndex = 1000;
+              };
+              const loadstop = () => {
+                overlay.style.zIndex = -1000;
+              };
+
+              webview.addEventListener('did-start-loading', loadstart)
+              webview.addEventListener('did-stop-loading', loadstop)
+            }
+          </script>
+    </body>
+</html>
