@@ -53,9 +53,10 @@
                 <div class="player" v-if='zone'>
                     <div v-if='zone.state == "stopped" || zone.state == "loading"' class="time"><small class="current">&mdash;</small> / <small class="duration">&mdash;</small></div>
                     <div v-else class="time"><small class="current">{{to_time(zone.now_playing.seek_position)}}</small> / <small class="duration">{{to_time(zone.now_playing.length)}}</small></div>
-                    <div class="time-rail pointer" @click.prevent="transport_seek">
+                    <div class="time-rail pointer" @click.prevent="transport_seek" v-on:mousemove="hover_show_seek_time" v-on:mouseleave="hover_hide_seek_time(false)">
                         <div class="thumb" :style='{ left: zone.now_playing.seek_position / zone.now_playing.length * 100 + "%" }'></div>
                         <div class="track"></div>
+                        <div class="time-rail-seek"></div>
                     </div>
                 </div>
                 <div class="player" v-else>

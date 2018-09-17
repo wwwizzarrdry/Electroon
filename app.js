@@ -44,7 +44,7 @@ function createWindow () {
     let allScreens = screenElectron.getAllDisplays();
     let dimensions = mainScreen.size;
     let posX = (dimensions.width - 370);
-    let posY = (dimensions.height - 408);
+    let posY = (dimensions.height - 404);
 
     // Load the previous state with fallback to defaults
     mainWindowState = new windowStateKeeper({
@@ -63,7 +63,7 @@ function createWindow () {
         'node-integration': true,
         x: mainWindowState.x || mainWindowState.defaultX,
         y: mainWindowState.y || mainWindowState.defaultY,
-        width: 369, 
+        width: 380, 
         height: 365,
         alwaysOnTop: false,
         overlayScrollbars: true,
@@ -418,7 +418,7 @@ function setWindowPosition(code){
     let allScreens = screenElectron.getAllDisplays();
     let dimensions = mainScreen.size;
     let posX = (dimensions.width - 370);
-    let posY = (dimensions.height - 408);
+    let posY = (dimensions.height - 400);
     switch(code) {
         case "TL":
             win.setPosition(0, 0, true);

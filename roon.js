@@ -206,10 +206,22 @@ var v = new Vue({
         transport_next: function() {
             core.services.RoonApiTransport.control(this.zone, 'next');
         },
-        transport_seek: function(event) {      
-            var x_perc = ( ($(".time-rail").width()) / (event.pageX - 10)),
+        hover_show_seek_time: function(event){
+            var x_perc = ( (event.pageX - 10) / $(".time-rail").width()),
                 duration = this.zone.now_playing.length,
-                seek_pos = (duration * x_perc).toFixed(0);
+                seek_pos = (duration * x_perc).toFixed(),
+                smart_pos = (event.pageX < 320) ? (event.pageX + 8) : (event.pageX - 35);
+            $(".time-rail-seek").attr("data-seek", this.to_time(seek_pos)).css("left", smart_pos + "px");
+        },
+        hover_hide_seek_time: function(event){
+            $(".time-rail-seek").attr("data-seek", "").css("left", "10px");
+        },
+        transport_seek: function(event) {      
+            var x_perc = ( (event.pageX - 10) / $(".time-rail").width()),
+                duration = this.zone.now_playing.length,
+                seek_pos = (duration * x_perc).toFixed();
+            if (seek_pos > duration) seek_pos = duration;
+            if (seek_pos < 0) seek_pos = 0;
             core.services.RoonApiTransport.seek(this.zone, 'absolute', seek_pos, (result) => {
                 console.log("RoonApiTransport.seek", result);
             });
