@@ -262,7 +262,19 @@
     overflow: hidden;
     cursor: pointer;
     transition: all 550ms ease; 
+    width: 345px;
   }
+  .music-box .dashboard .player .time-rail-seek {
+    position: absolute;
+    bottom: 0px;
+    left: 0px;
+  }
+  .music-box .dashboard .player .time-rail-seek:before {
+    content: attr(data-seek);
+    font-size: 8px;
+    letter-spacing: 1.5px;
+  }
+
   .music-box .dashboard .player .time-rail:hover {
     background: rgba(51, 136, 255, 0.11);
   }
@@ -286,8 +298,8 @@
   }
   .music-box .dashboard .player .time-rail .thumb::before {
     content: "";
-    width: 500px;
-    height: 1px;
+    width: 345px;
+    height: 2px;
     background-color: #4692fd;
     position: absolute;
     top: 50%;
@@ -296,7 +308,7 @@
 }
   .music-box .dashboard .player .time-rail .track {
     top: 50%;
-    width: 100%;
+    width: 345px;
     height: 1px;
     background-color: #155abb;
 }
