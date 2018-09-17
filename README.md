@@ -7,8 +7,6 @@ Mini Roon controller with tray icon built with Electron
 ![App](https://github.com/wwwizzarrdry/Electroon/blob/master/trayapp.PNG)
 
 
-### Windows executable available here:
-https://drive.google.com/file/d/1wV_QrnxExuGX00LwB8vzqXoUBBnJgxvf/view?usp=sharing
 
 ## Getting Started
 ```
@@ -20,7 +18,7 @@ https://drive.google.com/file/d/1wV_QrnxExuGX00LwB8vzqXoUBBnJgxvf/view?usp=shari
 5. Authorize extension in Roon
 ```
 ### If you npm install electron-packager, you can use the following to make an executable. 
-*Run it from the project root directory
+*Once you edit your config.json, run electron-packer command from the project root directory
 ```
 npm run package-win-asar
 npm run package-mac
