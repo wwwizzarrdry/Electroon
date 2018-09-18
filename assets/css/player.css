@@ -1,9 +1,15 @@
 @charset "UTF-8";
+
 * {
     outline: none;
     user-select: none;
   }
 
+
+  html {
+    width: 100vw;
+    height: 100vh;
+  }
   body {
     background-color: transparent;
     background-repeat: repeat, no-repeat;
@@ -16,20 +22,24 @@
     font-size: 13px;
     margin: 0;
     padding: 0;
-    min-width: 365px; 
-    min-height: 365px;
     overflow: hidden;
+    width: 100vw;
+    height: 100vh;
   }
 
+  .pointer {
+    cursor: pointer;
+  }
+  .mouse, .default {
+    cursor: default;
+  }
   #drag {
     display: none;
     position: fixed;
-    top: 2px;
-    left: 2px;
-    width: 366px;
-    height: 331px;
-    min-width: 366px;
-    min-height: 331px;
+    top: 0px;
+    left: 0px;
+    width: 100vw;
+    height: 100vh;
     cursor: move;
     z-index: -100000;
     -webkit-app-region: drag;
@@ -41,30 +51,29 @@
   }
   #drag.draggable {
     display: block;
-    outline: 2px solid #3388ff;
     z-index: 100000;
   }
   .enable-dragging {
     position: fixed;
-    top: -6px;
-    right: 0px;
+    top: -3px;
+    right: 2px;
     opacity: 0;
-    cursor: pointer;
+    cursor: move;
     transition: all 350ms ease;
+    color: #38f !important;
   }
   .enable-dragging:hover {
     opacity: 1;
     padding: 3px;
   }
-
   .done-dragging {
-    -webkit-app-region: no-drag;
+    -webkit-app-region: no-drag !important;
     position: fixed;
     opacity: 0;
     visibility: hidden;
     bottom: 0px;
     left: 0px;
-    width: 370px;
+    width: 100vw;
     height: 50px;
     z-index: -100000;
     background: #3388ff;
@@ -83,24 +92,23 @@
     opacity: 1;
     visibility: visible;
     z-index: 100001;
+    -webkit-app-region: no-drag;
   }
 
-  .music-box {
+  .music-box {   
+    -webkit-app-region: no-drag;
     position: relative;
+    height: 100%;
     transform: translate(0%, 0%);
     padding: 10px;
-    width: auto;
-    height: initial;
     border-radius: 3px;
     overflow: hidden;
     background: rgba(0,0,0,0.75);
-    min-height: 365px;
-    width: 350px;
-    height: 365px;
 }
   .music-box .album {
+    -webkit-app-region: no-drag;
     position: relative;
-    height: 207px;
+    height: 50vh;
     background: url(../img/SVG/rings.svg);
     background-position: center;
     background-repeat: no-repeat;
@@ -112,26 +120,25 @@
     position: absolute;
     width: auto;
     margin: auto 0;
-    top: 170px;
-    left: 15px;
+    top: 40vh;
   }
   .album.nowplaying:before {
     content: "" !important;
   }
   .music-box .album .photo {
+    -webkit-app-region: no-drag;
     background: url(assets/icons/roonbg.png) no-repeat 100% 100%;
     background-size: cover;
+    background-position: top;
     width: 100%;
-    min-height: 207px;
-    height: 207px;
+    height: 100%;
     filter: contrast(0.5) brightness(0.8) sepia(0.4) saturate(0.8);
   }
   .music-box .album .photo + img {
     position: absolute;
-    position: absolute;
     top: 15px;
     left: 15px;
-    width: 120px;
+    height: 50%;
     box-shadow: 0px 8px 20px -5px #000;
     z-index: 1;
   }
@@ -148,48 +155,56 @@
   .music-box .album .infos {
     background-color: rgba(0, 0, 0, 0.55);
     width: 100%;
-    height: 60px;
+    height: 33%;
     position: absolute;
     bottom: 0px;
   }
   .music-box .album .infos .song {
-    padding: 10px 0px 0px 10px;
+    padding: 10px 0px 0px 20px;
     color: rgb(166, 201, 250);
     letter-spacing: 0.5px;
-    cursor: pointer;
   }
   .line1 {
-    max-width: 200px;
+    -webkit-app-region: no-drag;
+    max-width: calc(100vw - 50px);
   }
   .line2{
-    max-width: 200px;
+    -webkit-app-region: no-drag;
+    max-width: calc(100vw - 50px);
   }
   .line3{
+    -webkit-app-region: no-drag;
     margin-top: 12px;
-    max-width: 175px;
+    max-width: calc(100vw - 50px);
   }
   .music-box .album .infos .song span, .music-box .album .infos .song small {
+    -webkit-app-region: no-drag;
     display: block;
   }
   .music-box .dashboard {
-    bottom: 0px;
+    -webkit-app-region: no-drag;
     position: relative;
-    width: 100%;
+    width: calc(100% - 10px);
+    height: 45vh;
+    padding: 0px;
+    margin: 10px;
   }
   .music-box .dashboard .list {
+    -webkit-app-region: no-drag;
     position: relative;
     transition-duration: 0.3s;
     background-color: #eee;
     right: 25px;
   }
   .music-box .dashboard .list .list-btn {
+    -webkit-app-region: no-drag;
     z-index: 2;
     background-color: #252525;
     width: 35px;
     height: 35px;
     position: absolute;
     right: 10px;
-    top: -22px;
+    top: -30px;
     cursor: pointer;
     transition-duration: 0.3s;
     transition-delay: 0.9s;
@@ -200,7 +215,7 @@
     transform: translate(-50%, -50%);
     display: block;
     width: 20px;
-    height: 1px;
+    height: 2px;
     background-color: #38f;
     position: relative;
     transition: width 0.3s 0.3s, background-color 0.3s 0.6s;
@@ -210,7 +225,7 @@
     background-color: #38f;
     content: "";
     width: 20px;
-    height: 1px;
+    height: 2px;
     position: absolute;
     left: 0;
     top: 0;
@@ -224,7 +239,7 @@
     margin-top: -6px;
   }
   .music-box .dashboard .list.active .list-btn {
-    top: -193px;
+    top: calc(100% - 55vh);
     transition: top 0.3s 0.6s;
   }
   .music-box .dashboard .list.active .list-btn span {
@@ -244,6 +259,10 @@
     transform: rotate(315deg);
   }
   
+  .music-box .dashboard .player {
+    height: 33%;
+  }
+
   .mini-time {
     position: absolute;
     right: 15px;
@@ -256,18 +275,20 @@
     padding-top: 5px;
   }
   .music-box .dashboard .player .time-rail {
-    height: 1px;
+    height: 2px;
     position: relative;
+    margin-top: 5px;
     padding: 10px 0;
     overflow: hidden;
     cursor: pointer;
-    transition: all 550ms ease; 
-    width: 345px;
+    transition: all 550ms ease;
+    width: 100%;
   }
   .music-box .dashboard .player .time-rail-seek {
     position: absolute;
     bottom: 0px;
     left: 0px;
+    z-index: 3;
   }
   .music-box .dashboard .player .time-rail-seek:before {
     content: attr(data-seek);
@@ -276,7 +297,8 @@
   }
 
   .music-box .dashboard .player .time-rail:hover {
-    background: rgba(51, 136, 255, 0.11);
+    background: rgba(51, 136, 255, 0.08);
+    border-radius: 0.2em;
   }
   .music-box .dashboard .player .time-rail .thumb, .music-box .dashboard .player .time-rail .track {
     position: absolute;
@@ -298,7 +320,7 @@
   }
   .music-box .dashboard .player .time-rail .thumb::before {
     content: "";
-    width: 345px;
+    width: 100vw;
     height: 2px;
     background-color: #4692fd;
     position: absolute;
@@ -308,7 +330,7 @@
 }
   .music-box .dashboard .player .time-rail .track {
     top: 50%;
-    width: 345px;
+    width: 100%;
     height: 1px;
     background-color: #155abb;
 }
@@ -328,7 +350,8 @@
   }
   .music-box .dashboard .action-button {
     text-align: center;
-    margin-top: 10px;
+    margin-top: 20px;
+    height: 80%;
   }
   .music-box .dashboard .action-button a {
     cursor: pointer;
@@ -384,7 +407,7 @@
     z-index: 1;
     position: absolute;
     width: 100%;
-    height: 100%;
+    height: calc(100% - 24px);
     top: 0;
     left: 0;
     background-color: #262626;
@@ -404,6 +427,8 @@
     height: 25px;
     box-sizing: border-box;
     color: #38f;
+    height: 20vh;
+    min-height: 50px;
   }
   .browsertitle {
     font-size: 12px;
@@ -461,11 +486,56 @@
     background-color: rgba(70, 50, 57, 0.3);
   }
   .box {
-    height: 30px; 
     position: relative; 
-    top: 0px; 
-    left: 80px;
   }
+
+  @media screen and ( max-height: 200px ) {
+    .hidden-small {
+      display: none; 
+     }
+     .visible-small {
+       display: block;
+     }
+     .music-box .dashboard .player {
+       height: 33% !important;
+     }
+     .main-grid {
+       margin-top: -10px;
+     }
+ }
+ @media screen and ( min-height: 201px ) and ( max-height: 599px ){
+   .hidden-small {
+     display: ''; 
+   }
+   .visible-small {
+     display: none;
+   }
+   .music-box .dashboard .player {
+     height: 22%;
+   }
+   .music-box .album .infos .song {
+    font-size: 1em;
+  }
+ }
+
+ @media screen and ( min-height: 600px ) {
+  .hidden-small {
+    display: ''; 
+  }
+  .visible-small {
+    display: none;
+  } 
+  .music-box .album {
+     height: 70vh !important;
+   }
+   .music-box .dashboard {
+     height: 15vh !important;
+   }
+   .music-box .album .infos .song {
+    font-size: 3.5em;
+  }
+ }
+
 
   @-webkit-keyframes stripes {
     0% {
@@ -484,3 +554,4 @@
         background-position: 30px 0
     }
 }
+
