@@ -4,10 +4,10 @@ var RoonApi          = require("node-roon-api"),
     RoonApiImage     = require('node-roon-api-image'),
     RoonApiBrowse    = require('node-roon-api-browse'),
     Vue              = require('vue'),
-    config           = require('./config/config.json');
+    config           = require('./config/config.json'),
+    debug = false;
 
-let debug = config.my_settings.debug;
-
+// Initialize Services
 var core, roonstate;
 var roon = new RoonApi({
 
@@ -29,12 +29,10 @@ var roon = new RoonApi({
         v.current_zone_id = roon.load_config("current_zone_id");
 
         core.services.RoonApiTransport.subscribe_zones((response, msg) => {
-           if (response == "Subscribed") { 
-               // Subscribe to Zone
+            if (response == "Subscribed") { 
                let zones = msg.zones.reduce((p,e) => (p[e.zone_id] = e) && p, {});
                v.$set('zones', zones);
             } else if (response == "Changed") { 
-                // Changed Zone
                 var z;
                 if (msg.zones_removed) msg.zones_removed.forEach(e => delete(v.zones[e.zone_id]));
                 if (msg.zones_added)   msg.zones_added  .forEach(e => v.zones[e.zone_id] = e);
@@ -55,15 +53,15 @@ var roon = new RoonApi({
     }
 });
 
+// Initialize Services
 var svc_status = new RoonApiStatus(roon);
 roon.init_services({
     provided_services: [ svc_status ],
     required_services: [ RoonApiBrowse, RoonApiTransport, RoonApiImage ]
 });
-svc_status.set_status(config.my_settings.eightball[Math.floor(Math.random() * (config.my_settings.eightball.length - 0 + 1)) + 0], false);
+svc_status.set_status(magicEigthBall(), false);
 
-
-//Vue.config.devtools = true;
+// Initialize Vue Component
 var v = new Vue({
     el: "#roonapp",
     template: require('./player.html'),
@@ -78,21 +76,17 @@ var v = new Vue({
             list:            null,
             items:           [],
             paired:          false,
-            first_run:       true,
-            album_img:       null,
-            artist_img:      null,
             roonstate:       null
         }
     }, 
     created: function(){
         ipcRenderer.on('config_saved', (event, data) => {
-            //if(debug) console.log('######################\nConfig was saved!', data);
+            console.log('Config was saved!', data);
         });
         ipcRenderer.on('config_loaded', (event, data) => {
-            //if(debug) console.log('######################\nConfig was loaded!', data);
+            console.log('Config was loaded!', data);
         });
         ipcRenderer.on('set_draggable', (event, data) => {
-            if(debug) console.log('######################\nset_draggable', data);
             if(data.enabled) {
                 $(data.css_selector).addClass('draggable');               
             } else {
@@ -103,39 +97,16 @@ var v = new Vue({
     computed: {
         zone: function () {
             return this.zones[this.current_zone_id];
-        },
-        artist_img: function() {
-            if(this.zones[this.current_zone_id].now_playing.artist_image_keys) {
-                return 'http://' + this.server_ip + ':' + this.server_port + '/api/image/' + this.zones[this.current_zone_id].now_playing.artist_image_keys[0] + '?scale=fit&width=1920&height=1080';
-            } else {
-                return 'assets/img/noimage.jpg';
-            }
-        },
-        album_img: function() {
-            if(this.zones[this.current_zone_id].now_playing.image_key){
-                return 'http://' + this.server_ip + ':' + this.server_port + '/api/image/' + this.zones[this.current_zone_id].now_playing.image_key + '?scale=fit&width=1920&height=1080';return 'http://' + this.server_ip + ':' + this.server_port + '/api/image/' + this.zones[this.current_zone_id].now_playing.image_key + '?scale=fit&width=1920&height=1080';
-            } else {
-                return 'assets/img/noimage.jpg';
-            }
-            
-        },
-        history: function() {
-            return config.my_settings.history;
-        },
-        conf: function() {
-            return config;
         }
     },
     watch: {
         'roonstate': function(val, oldval){
             config.roonstate = val;
             ipcRenderer.send('save_config', config);
-            console.log("roonstate updated", val);
         },
         'paired': function(val, oldval) {
             config.paired = val;
             save_config(config);
-            refresh_browse();
         },
         'current_zone_id': function(val, oldval) {
             roon.save_config("current_zone_id", val);
@@ -144,10 +115,6 @@ var v = new Vue({
             config.my_settings.first_run = false;
             save_config(config);
             refresh_browse();
-        },
-        'zones[current_zone_id].now_playing.image_key': function() {
-            update_now_playing(this);
-            update_history(config);
         }
     },
     methods: {
@@ -207,19 +174,26 @@ var v = new Vue({
             core.services.RoonApiTransport.control(this.zone, 'next');
         },
         hover_show_seek_time: function(event){
-            var x_perc = ( (event.pageX - 10) / $(".time-rail").width()),
+            var w = $(document).width() - 23,
+                x = event.pageX - 12,
+                x_perc = (x/w),
                 duration = this.zone.now_playing.length,
-                seek_pos = (duration * x_perc).toFixed(),
-                smart_pos = (event.pageX < 320) ? (event.pageX + 8) : (event.pageX - 35);
+                seek_pos = (duration * x_perc).toFixed(0),
+                smart_pos = (event.pageX < (w*0.5) ) ? (x + 8) : (x - 45);
+            if (seek_pos > duration) seek_pos = duration;
+            if (seek_pos < 0) seek_pos = 0;
             $(".time-rail-seek").attr("data-seek", this.to_time(seek_pos)).css("left", smart_pos + "px");
         },
         hover_hide_seek_time: function(event){
             $(".time-rail-seek").attr("data-seek", "").css("left", "10px");
         },
         transport_seek: function(event) {      
-            var x_perc = ( (event.pageX - 10) / $(".time-rail").width()),
+            var w = $(document).width() - 23,
+                x = event.pageX - 12,
+                x_perc = (x/w),
                 duration = this.zone.now_playing.length,
-                seek_pos = (duration * x_perc).toFixed();
+                seek_pos = (duration * x_perc).toFixed(0);
+                
             if (seek_pos > duration) seek_pos = duration;
             if (seek_pos < 0) seek_pos = 0;
             core.services.RoonApiTransport.seek(this.zone, 'absolute', seek_pos, (result) => {
@@ -277,24 +251,11 @@ var v = new Vue({
         },
         toggleTrackAlbumTitle: function(){
             $(".line1, .line2").toggleClass("uk-hidden");
-        },
-        randID_generator: function () {
-            var randLetter = String.fromCharCode(65 + Math.floor(Math.random() * 36));
-            return randLetter + Date.now();
-        },
-        hex2rgba: function (hex,opacity){
-            opacity = (opacity > 1) ? (opacity/100).toFixed(2) : opacity; 
-            hex = hex.replace('#','');
-            r = parseInt(hex.substring(0,2), 16);
-            g = parseInt(hex.substring(2,4), 16);
-            b = parseInt(hex.substring(4,6), 16);
-    
-            result = 'rgba('+r+','+g+','+b+','+opacity+')';
-            return result;
         }
     }
 });
 
+// Utility Functions
 function load_config(cfg) {
     ipcRenderer.send('load_config', cfg);
 };
@@ -304,68 +265,13 @@ function save_config(cfg) {
     roon.save_config("current_zone_id", cfg.current_zone_id);
 };
 
-function update_tray_title(title) {
-    ipcRenderer.send('update-tray-title', title);
-};
-
-function update_now_playing() {
-    if(v.zones[v.current_zone_id].now_playing.artist_image_keys) {
-        v.artist_img = 'http://' + v.server_ip + ':' + v.server_port + '/api/image/' + v.zones[v.current_zone_id].now_playing.artist_image_keys[0] + '?scale=fit&width=1920&height=1080';
-    } else {
-        v.artist_img = 'assets/img/noimage.jpg';
-    }
-    if(v.zones[v.current_zone_id].now_playing.image_key){
-        v.album_img = 'http://' + v.server_ip + ':' + v.server_port + '/api/image/' + v.zones[v.current_zone_id].now_playing.image_key + '?scale=fit&width=1920&height=1080'; 
-    } else {
-        v.album_img = 'assets/img/noimage.jpg';
-    }
-    var data = {
-        "artist_img": v.artist_img,
-        "album_img": v.album_img,
-        "zone": v.zone
-    };
-    console.log("update_now_playing()", data)
-    ipcRenderer.send('nowPlaying', data);
+function update_nowPlaying() {
+    ipcRenderer.send('nowPlaying', v.zone);
 }; 
 
-function update_history(cfg) {
-    // Update the history array
-    var ts = new Date;
-
-    // Update the image keys
-    if(v.zones[v.current_zone_id].now_playing.artist_image_keys) {
-        cfg.my_settings.last_artist_key = v.zones[v.current_zone_id].now_playing.artist_image_keys[0];
-    } else {
-        cfg.my_settings.last_artist_key = 'assets/img/noimage.jpg';
-    }
-    if(v.zones[v.current_zone_id].now_playing.image_key){
-        cfg.my_settings.last_album_key = v.zones[v.current_zone_id].now_playing.image_key; 
-    } else {
-        cfg.my_settings.last_artist_key = 'assets/img/noimage.jpg';
-    }
-    
-
-    // Keep 100 tracks
-    if (cfg.my_settings.history.length == 100) {
-        cfg.my_settings.history.shift(0);   
-    };
-
-    if (cfg.my_settings.history.length && cfg.my_settings.history.pop().line1 == v.zones[v.current_zone_id].now_playing.three_line.line1) {
-        cfg.my_settings.history[cfg.my_settings.history.length - 1].timestamp = ts.valueOf(); 
-    } else {
-        cfg.my_settings.history.push({            
-            "timestamp": ts.valueOf(),
-            "profile": cfg.my_settings.profile,
-            "line1": v.zones[v.current_zone_id].now_playing.three_line.line1,
-            "line2": v.zones[v.current_zone_id].now_playing.three_line.line2,
-            "line3": v.zones[v.current_zone_id].now_playing.three_line.line3,
-            "artist_img": v.artist_img,
-            "album_img": v.album_img
-        });
-    }
-
-    ipcRenderer.send('save_config', cfg);
-};
+function magicEigthBall() {
+    return config.my_settings.eightball[Math.floor(Math.random() * (config.my_settings.eightball.length - 0 + 1)) + 0];
+}
 
 function refresh_browse(opts) {
     opts = Object.assign({

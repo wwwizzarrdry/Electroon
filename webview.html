@@ -5,6 +5,10 @@
             body {
                 margin: 0px;
                 background: #262626;
+                background-attachment: fixed;
+                background-position: center;
+                background-size: cover;
+                background-repeat: no-repeat;
             }
             webview {
                 display: inline-flex;
@@ -41,6 +45,7 @@
                 background: #151515;
                 padding: 5px;
                 text-align: center;
+                z-index: 5;
             }
             nav a {
                 line-height: 25px;
@@ -60,8 +65,9 @@
             }
         </style>
     </head>
-    <body>
+    <body style="background-image: url(https://source.unsplash.com/daily?music/1920x1080);">
         <nav>
+            <a href="https://www.google.com/"><img src="assets/img/google.png"/></a>
             <a href="https://app.plex.tv/desktop"><img src="assets/img/plex.png"/></a>
             <a href="https://www.last.fm/"><img src="assets/img/lastfm.png"/></a>
             <a href="https://www.youtube.com/"><img src="assets/img/youtube.png"/></a>
@@ -71,8 +77,10 @@
             <a href="https://tidal.com/"><img src="assets/img/tidal.png"/></a>
             <a href="https://www.pandora.com/"><img src="assets/img/pandora.png"/></a>
             <a href="ttps://soundcloud.com/stream"><img src="assets/img/soundcloud.png"/></a>
+            <a href="https://itunes.apple.com/us/artist/player/6241828"><img src="assets/img/applemusic.png"/></a>
+            <a href="https://music.amazon.com/"><img src="assets/img/amazonprime.png"/></a>
         </nav>
-        <webview id="website" src="https://source.unsplash.com/daily?music/1920x1080" partition="persist:roon" autosize nodeintegration plugins></webview>
+        <webview id="website" src="" partition="persist:roon" autosize nodeintegration plugins></webview>
         <span class="overlay"></span>
         <script>
             onload = () => {

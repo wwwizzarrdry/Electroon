@@ -24,7 +24,6 @@ let contextMenu = null;
 //app.commandLine.appendSwitch('high-dpi-support', 'true');
 //app.commandLine.appendSwitch('force-device-scale-factor', '1.5');
 
-
 // Change to working directory
 try {
     process.chdir(process.cwd()+'/config');
@@ -36,35 +35,29 @@ try {
     console.error(`chdir: ${err}`);
 }
 
+var screenElectron, mainScreen, allScreens, dimensions, posX, posY, last_dimension;
 // Player Window
 function createWindow () {
-
-    let screenElectron = electron.screen;
-    let mainScreen = screenElectron.getPrimaryDisplay();
-    let allScreens = screenElectron.getAllDisplays();
-    let dimensions = mainScreen.size;
-    let posX = (dimensions.width - 370);
-    let posY = (dimensions.height - 404);
+    // Set initial window state params
+    loadDimensions();
 
     // Load the previous state with fallback to defaults
-    mainWindowState = new windowStateKeeper({
+    mainWindowState = windowStateKeeper({
         path: 'winstate',
         file: 'window-state.json',
-        defaultWidth: 370,
-        defaultHeight: 365,
+        defaultWidth: 500,
+        defaultHeight: 550,
         defaultX: posX,
         defaultY: posY
     });
     
-    if(debug) console.log("\nScreen Dimensions: " + dimensions.width + "x" + dimensions.height);
-
     // Create the browser window.
     win = new BrowserWindow({
         'node-integration': true,
         x: mainWindowState.x || mainWindowState.defaultX,
         y: mainWindowState.y || mainWindowState.defaultY,
-        width: 380, 
-        height: 365,
+        width: mainWindowState.width || 365, 
+        height: mainWindowState.height || 350,
         alwaysOnTop: false,
         overlayScrollbars: true,
         show: false,
@@ -74,8 +67,10 @@ function createWindow () {
         skipTaskbar: true,
         maximizable: false,
         minimizable: false
-    })
+    });
 
+    win.setMinimumSize(350, 150);
+    win.setMaximumSize(dimensions.width, dimensions.height)
     mainWindowState.manage(win);
 
     win.loadFile('index.html')
@@ -106,7 +101,7 @@ function createWindow () {
         bgwin = null;
         tray = null;
     })
-}
+};
 
 // Splash screen
 function createSplash() {
@@ -130,18 +125,13 @@ function createSplash() {
     
     splash.loadFile('splash.html')
     splash.show();
-}
+};
 
-// speed Dial Window
+// Webview Window
 function createBGWindow() {
-
-    let screenElectron = electron.screen;
-    let mainScreen = screenElectron.getPrimaryDisplay();
-    let allScreens = screenElectron.getAllDisplays();
-    let dimensions = mainScreen.size;
-
+    loadDimensions();
     // Load the previous state with fallback to defaults
-    bgWindowState = new windowStateKeeper({
+    bgWindowState = windowStateKeeper({
         path: 'winstate',
         file: 'bg-window-state.json',
         defaultWidth: 800,
@@ -149,12 +139,12 @@ function createBGWindow() {
     });
 
     bgwin = new BrowserWindow({
-        'node-integration': true,
+        'node-integration': false,
         darkTheme: config.my_settings.darkTheme,
-        x: mainWindowState.x,
-        y: mainWindowState.y,
-        width: mainWindowState.width, 
-        height: mainWindowState.height, 
+        x: bgWindowState.x || null,
+        y: bgWindowState.y || null,
+        width: mainWindowState.width || bgWindowState.defaultWidth, 
+        height: mainWindowState.height || bgWindowState.defaultHeight, 
         alwaysOnTop: false,
         overlayScrollbars: true,
         show: true,
@@ -186,10 +176,106 @@ function createBGWindow() {
     })
 };
   
+
+// Default dimensions
+function loadDimensions() {
+    let winSize = (win) ? win.getSize() : [350, 350];
+    screenElectron = electron.screen;
+    mainScreen = screenElectron.getPrimaryDisplay();
+    allScreens = screenElectron.getAllDisplays();
+    dimensions = mainScreen.size;
+    posX = (dimensions.width - winSize[0]);
+    posY = (dimensions.height - winSize[1]);
+};
+
+// Auto Position Window
+function setWindowPosition(code){
+    loadDimensions();
+    switch(code) {
+        case "TL":
+            win.setPosition(0, 0, true);
+            break;
+        case "TR":
+            win.setPosition(posX, 0, true);
+            break;
+        case "BR":
+            win.setPosition(posX, posY, true);
+            break;
+        case "BL":
+            win.setPosition(0, posY, true);
+            break;
+    }
+    win.show();
+    mainWindowState.saveState(win);
+};
+
+// Enable Dragging Window
+function setWindowDraggable(targetWindow, css_selector, enabled) {
+    targetWindow.webContents.send('set_draggable', {
+        css_selector: css_selector,
+        enabled: enabled
+    });
+};
+
+// Generate App Icons
+var roon_img, google_img, chromium_img, gmusic_img, lastfm_img, plex_img, sonos_img, tidal_img, youtube_img, youtubemusic_img, spotify_img, soundcloud_img, pandora_img, amazon_img, apple_img;
+function generateIcons() {
+    // Registered Icons
+    roon_img = nativeImage.createFromPath(__dirname + '/assets/img/roon.png');
+    google_img = nativeImage.createFromPath(__dirname + '/assets/img/google.png');
+    chromium_img = nativeImage.createFromPath(__dirname + '/assets/img/chromium.png');
+    gmusic_img = nativeImage.createFromPath(__dirname + '/assets/img/googlemusic.png');
+    lastfm_img = nativeImage.createFromPath(__dirname + '/assets/img/lastfm.png');
+    plex_img = nativeImage.createFromPath(__dirname + '/assets/img/plex.png');
+    sonos_img = nativeImage.createFromPath(__dirname + '/assets/img/sonos.png');
+    tidal_img = nativeImage.createFromPath(__dirname + '/assets/img/tidal.png');
+    youtube_img = nativeImage.createFromPath(__dirname + '/assets/img/youtube.png');
+    youtubemusic_img = nativeImage.createFromPath(__dirname + '/assets/img/youtubemusic.png');
+    spotify_img = nativeImage.createFromPath(__dirname + '/assets/img/spotify.png');
+    soundcloud_img = nativeImage.createFromPath(__dirname + '/assets/img/soundcloud.png');
+    pandora_img = nativeImage.createFromPath(__dirname + '/assets/img/pandora.png');
+    amazon_img = nativeImage.createFromPath(__dirname + '/assets/img/amazonprime.png');
+    apple_img = nativeImage.createFromPath(__dirname + '/assets/img/applemusic.png');
+
+    return {
+        "chromium": chromium_img,
+        "roon": roon_img,
+        "googlemusic": gmusic_img,
+        "lastfm": lastfm_img,
+        "plex": plex_img,
+        "sonos": sonos_img,
+        "tidal": tidal_img,
+        "youtube": youtube_img,
+        "youtubemusic": youtubemusic_img,
+        "spotify": spotify_img,
+        "soundcloud": soundcloud_img,
+        "pandora": pandora_img
+    }
+}; 
+
+function testFsModule() {
+    // Debug FS
+    try { 
+        var t = new Date;
+        fs.mkdir('tests', function() {
+            fs.writeFile('tests/fs-write-test.txt', 'Command: fs.writeFile();\nResult: Success!\nTimestamp: ' + t + '\nWorking Directory: ' + process.cwd(), function() {
+                fs.readFile('tests/fs-write-test.txt', 'utf-8', function(err, data) {
+                    if(err) {
+                        console.log(err)
+                    } else {
+                        console.log(process.cwd(), data);
+                    }
+                });
+            });
+        });
+    } catch(err) { 
+        console.log(err);
+    }
+};
+
 app.on('ready', () => {
     createSplash();
     createWindow();
-    //createBGWindow();
 
     // Build tray icon
     tray = new Tray(icons["roon"]);
@@ -205,76 +291,13 @@ app.on('ready', () => {
                     createBGWindow();
                 }
             }
-        },
-        {type: "separator"},
-        {
-            label: "Change Player", 
-            submenu: [
-                {
-                    label: "Roon", 
-                    type: 'radio', 
-                    checked: true,
-                    click: (item, window, event) => {
-                        tray.displayBalloon({
-                            icon: icons["roon"],
-                            title: 'Roon',
-                            content: 'You switched to Roon'
-                        });
-                        tray.setTitle('Roon Player');
-                        tray.setToolTip('Roon Player');
-                        tray.setImage(icons["roon"])
-                    }
-                },
-                {
-                    label: "LastFM",
-                    type: 'radio',  
-                    click: (item, window, event) => {
-                        tray.displayBalloon({
-                            icon: icons["lastfm"],
-                            title: 'LastFM',
-                            content: 'You switched to LastFM'
-                        });
-                        tray.setTitle('LastFM Player');
-                        tray.setToolTip('LastFM Player');
-                        tray.setImage(icons["lastfm"])
-                    }
-                },
-                {
-                    label: "Plex", 
-                    type: 'radio', 
-                    click: (item, window, event) => {
-                        tray.displayBalloon({
-                            icon: icons["plex_img"],
-                            title: 'Plex',
-                            content: 'You switched to Plex'
-                        });
-                        tray.setTitle('Plex Player');
-                        tray.setToolTip('Plex Player');
-                        tray.setImage(icons["plex_img"])
-                    }
-                },
-                {
-                    label: "Sonos", 
-                    type: 'radio', 
-                    click: (item, window, event) => {
-                        tray.displayBalloon({
-                            icon: icons["sonos_img"],
-                            title: 'Sonos',
-                            content: 'You switched to Sonos'
-                        });
-                        tray.setTitle('Sonos Player');
-                        tray.setToolTip('Sonos Player');
-                        tray.setImage(icons["sonos_img"])
-                    }
-                }
-            ]
-        },
+        },        
         {type: "separator"},
         {
             label  : "Position",
             submenu: [
                 {
-                    label: 'Free Range', 
+                    label: 'Free Roam', 
                     type: 'normal', 
                     click:function() {
                         setWindowDraggable(win, "#drag", true);
@@ -312,6 +335,7 @@ app.on('ready', () => {
                 }
             ]
         },
+        {type: "separator"},
         {
             label: 'Always On Top', 
             type: 'checkbox', 
@@ -323,11 +347,44 @@ app.on('ready', () => {
             }
         },
         {
-            label: 'Inspect', 
-            type: 'normal', 
-            click: function(){
-                win.toggleDevTools();
-            }
+            label  : "More...",
+            submenu: [
+                {
+                    label: 'Maximize', 
+                    type: 'checkbox', 
+                    click: function(){ 
+                        var curSize = win.getSize();
+                        var maxSize = win.getMaximumSize();
+                        if(curSize.reduce((a,b)=>a*b) >= maxSize.reduce((a,b)=>a*b)) {
+                            win.setSize(last_dimension.size[0], last_dimension.size[1]);
+                            win.setPosition(last_dimension.pos[0], last_dimension.pos[1], 1000);
+                            mainWindowState.saveState(win);
+                        } else {
+                            last_dimension = {
+                                size: win.getSize(),
+                                pos: win.getPosition()
+                            };
+                            win.setSize(maxSize[0], maxSize[1]);
+                            win.setPosition(0, 1, true);
+                            mainWindowState.saveState(win);
+                        }
+                    }
+                },
+                {
+                    label: 'Show in Taskbar', 
+                    type: 'checkbox', 
+                    click: function(){
+                        win.skipTaskbar() ? win.setSkipTaskbar(false) : win.setSkipTaskbar(true);
+                    }
+                },
+                {
+                    label: 'Inspect', 
+                    type: 'normal', 
+                    click: function(){
+                        win.toggleDevTools();
+                    }
+                },
+            ]
         },
         {
             label: 'Quit', 
@@ -345,9 +402,10 @@ app.on('ready', () => {
         win.isVisible() ? win.hide() : win.show();
     });
 
-    // Cross Window Comms
+    // Get current zone details
     ipcMain.on('nowPlaying', (event, arg) => {
-        if(debug) console.log('\nnowPlaying')
+        console.log('\nnowPlaying', arg);
+        tray.setTitle(arg.now_playing.three_line.line1);
         //event.sender.send('nowPlaying', arg)
     });
 
@@ -356,7 +414,6 @@ app.on('ready', () => {
         let data = JSON.stringify(arg, null, 4);
         fs.writeFile('config.json', data, function() {
             event.sender.send('config_saved', data);
-            if(debug) console.log('######################\nconfig_saved: ' + process.cwd()+'\n', data);    
         });
     });
 
@@ -364,7 +421,6 @@ app.on('ready', () => {
     ipcMain.on('load_config', (event, arg) => {
         fs.readFileSync('config.json', function(data) {
             event.sender.send('config_loaded', data);
-            if(debug) console.log('######################\nload_config:' +  process.cwd() + '\n', data);
         });
     });
 
@@ -373,11 +429,6 @@ app.on('ready', () => {
         if (win) mainWindowState.saveState(win);
         if (bgwin) bgWindowState.saveState(bgwin);
     });
-
-    // Update Tray Title
-    ipcMain.on('update-tray-title', function(event, title) {
-        tray.setTitle(title);
-    });
 });
 
 
@@ -385,19 +436,19 @@ app.on('activate', () => {
     if (win === null) {
         createWindow()
     }
-})
+});
 
 // Before Quit
 app.on('before-quit', () => {
     console.log('before-quit: fired')
-})
+});
 
 // Quit when all windows are closed.
 app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') {
         app.quit()
     }
-})
+});
 
 // Wil Quit - All windows closed, about to quit
 app.on('will-quit', () => {
@@ -406,93 +457,4 @@ app.on('will-quit', () => {
     splash = null;
     bgwin = null;
     win = null;
-})
-
-
-
-
-// Other App Functions
-function setWindowPosition(code){
-    let screenElectron = electron.screen;
-    let mainScreen = screenElectron.getPrimaryDisplay();
-    let allScreens = screenElectron.getAllDisplays();
-    let dimensions = mainScreen.size;
-    let posX = (dimensions.width - 370);
-    let posY = (dimensions.height - 400);
-    switch(code) {
-        case "TL":
-            win.setPosition(0, 0, true);
-            break;
-        case "TR":
-            win.setPosition(posX, 0, true);
-            break;
-        case "BR":
-            win.setPosition(posX, posY, true);
-            break;
-        case "BL":
-            win.setPosition(0, posY, true);
-            break;
-    }
-    win.show();
-    mainWindowState.saveState(win);
-};
-
-function setWindowDraggable(targetWindow, css_selector, enabled) {
-    targetWindow.webContents.send('set_draggable', {
-        css_selector: css_selector,
-        enabled: enabled
-    });
-};
-
-// Generate App Icons
-function generateIcons() {
-
-    // Registered Icons
-    let roon_img = nativeImage.createFromPath(__dirname + '/assets/img/roon.png');
-    let chromium_img = nativeImage.createFromPath(__dirname + '/assets/img/chromium.png');
-    let gmusic_img = nativeImage.createFromPath(__dirname + '/assets/img/googlemusic.png');
-    let lastfm_img = nativeImage.createFromPath(__dirname + '/assets/img/lastfm.png');
-    let plex_img = nativeImage.createFromPath(__dirname + '/assets/img/plex.png');
-    let sonos_img = nativeImage.createFromPath(__dirname + '/assets/img/sonos.png');
-    let tidal_img = nativeImage.createFromPath(__dirname + '/assets/img/tidal.png');
-    let youtube_img = nativeImage.createFromPath(__dirname + '/assets/img/youtube.png');
-    let youtubemusic_img = nativeImage.createFromPath(__dirname + '/assets/img/youtubemusic.png');
-    let spotify_img = nativeImage.createFromPath(__dirname + '/assets/img/spotify.png');
-    let soundcloud_img = nativeImage.createFromPath(__dirname + '/assets/img/soundcloud.png');
-    let pandora_img = nativeImage.createFromPath(__dirname + '/assets/img/pandora.png');
-
-    return {
-        "chromium": chromium_img,
-        "roon": roon_img,
-        "googlemusic": gmusic_img,
-        "lastfm": lastfm_img,
-        "plex": plex_img,
-        "sonos": sonos_img,
-        "tidal": tidal_img,
-        "youtube": youtube_img,
-        "youtubemusic": youtubemusic_img,
-        "spotify": spotify_img,
-        "soundcloud": soundcloud_img,
-        "pandora": pandora_img
-    }
-};
-
-function testFsModule() {
-    // Debug FS
-    try { 
-        var t = new Date;
-        fs.mkdir('tests', function() {
-            fs.writeFile('tests/fs-write-test.txt', 'Command: fs.writeFile();\nResult: Success!\nTimestamp: ' + t + '\nWorking Directory: ' + process.cwd(), function() {
-                fs.readFile('tests/fs-write-test.txt', 'utf-8', function(err, data) {
-                    if(err) {
-                        console.log(err)
-                    } else {
-                        console.log(process.cwd(), data);
-                    }
-                });
-            });
-        });
-    } catch(err) { 
-        console.log(err);
-    }
-}
+});
