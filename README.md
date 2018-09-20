@@ -1,6 +1,9 @@
 # Electroon
 Mini Roon controller with tray icon built with Electron
 
+## Windows Executable
+https://www.dropbox.com/s/mko2oad4kyjv0pt/Electroon-win32-x64.zip?dl=0
+
 ## Screenshots
 ![Splash](https://github.com/wwwizzarrdry/Electroon/blob/master/splashscreen.PNG)
 
