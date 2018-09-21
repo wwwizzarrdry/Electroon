@@ -1,23 +1,27 @@
-const fs                     = require('fs');
+//const fs                     = require('fs');
+const fs                     = require('fs-extra');
 const windowStateKeeper      = require('electron-window-state');
 const electron               = require('electron');
 const {Menu, Tray, ipcMain } = require('electron');
 const nativeImage            = require('electron').nativeImage;
 const path                   = require('path');
 const nrc                    = require('node-run-cmd');
+const wallpaper              = require('wallpaper');
 const app                    = electron.app;
 const BrowserWindow          = electron.BrowserWindow;
 var mainWindowState          = null;
 var bgWindowState            = null;
 var icons                    = generateIcons();
 let debug                    = false;
-//var config = require('./config/config.json');
 
 let splash = null;
 let bgwin = null;
 let win = null;
 let tray = null;
 let contextMenu = null;
+
+const originalWallpaper = saveOriginalWallpaper();
+
 
 // Set DPI Scaling
 //app.commandLine.appendSwitch('high-dpi-support', 'true');
@@ -30,6 +34,7 @@ console.log(__dirname);
 try {
     process.chdir(process.cwd()+'/config');
     console.log('\nNew working directory:\n' + process.cwd());
+    // Test FS Module
     testFsModule();
 } catch (err) {
     console.error(`chdir: ${err}`);
@@ -176,7 +181,7 @@ function createBGWindow() {
         bgwin = null;
     })
 };
-  
+
 // Create Taskbar Buttons
 function setTaskbarBtn() {
     win.setThumbarButtons([]);
@@ -281,6 +286,31 @@ function generateIcons() {
     }
 }; 
 
+// Save Original Wallpaper
+function saveOriginalWallpaper() {
+    wallpaper.get().then(imagePath => {
+        console.log("\n\nSave Original Wallpaper: " + imagePath);
+        // Copy Current Wallpaper
+        fs.copy(imagePath, './art/originalWallpaper.png')
+        .then(() => console.log('originalWallpaper copied: success!'))
+        .catch(err => console.error(err))
+    });
+};
+
+// Get current wallpaper
+function getWallpaper() {
+    wallpaper.get().then(imagePath => {
+        return imagePath;
+    });
+};
+
+// Set current wallpaper
+function setWallpaper(imagePath, setImmediate) {
+    wallpaper.set(imagePath).then(() => {
+        console.log('\n\nNew wallpaper: ' + imagePath);
+    });
+};
+
 function testFsModule() {
     // Debug FS
     try { 
@@ -307,7 +337,7 @@ app.on('ready', () => {
 
     // Build tray icon
     tray = new Tray(icons["roon"]);
-    contextMenu = Menu.buildFromTemplate([
+    let template = [
         {
             label: "Speed Dial", 
             type: "normal",
@@ -405,11 +435,27 @@ app.on('ready', () => {
                     }
                 },
                 {
+                    label: 'Hide Dashboard', 
+                    type: 'checkbox', 
+                    checked: false,
+                    click: function(){ 
+                        win.webContents.send('toggle_dashboard', {});
+                        this.checked = !this.checked;
+                    }
+                },
+                {
                     label: 'Relaunch', 
                     type: 'checkbox', 
                     click: function(){
                         app.relaunch({args: process.argv.slice(1).concat(['--relaunch'])})
                         app.exit(0)
+                    }
+                },
+                {
+                    label: 'Settings', 
+                    type: 'normal', 
+                    click: function(){
+                        win.webContents.send('open_settings', {});   
                     }
                 },
                 {
@@ -419,13 +465,6 @@ app.on('ready', () => {
                         win.toggleDevTools();
                     }
                 },
-                {
-                    label: 'Settings', 
-                    type: 'normal', 
-                    click: function(){
-                        win.webContents.send('open_settings', {});   
-                    }
-                }
             ]
         },
         {
@@ -435,7 +474,9 @@ app.on('ready', () => {
                 app.quit();
             }
         }
-    ]);
+    ];
+
+    contextMenu = Menu.buildFromTemplate(template);
     tray.setToolTip('Roon Mini-Controller');
     tray.setContextMenu(contextMenu);
     tray.on('click', (event) => {
@@ -445,11 +486,20 @@ app.on('ready', () => {
 
     // Get current zone details
     ipcMain.on('nowPlaying', (event, arg) => {
-        console.log('\n\nnowPlaying', arg);
-        var img = nativeImage.createFromPath('./art/taskbar.png');
-        tray.setToolTip(arg.now_playing.three_line.line1 + ' - ' +  arg.now_playing.three_line.line3 + ' - ' +  arg.now_playing.three_line.line2);
-        win.setOverlayIcon(img, 'Now Playing')
-        //event.sender.send('nowPlaying', arg)
+        console.log('\nnowPlaying', arg);
+        
+        // Update Taskbar overlay icon
+        var img = nativeImage.createFromPath('./art/album.png');
+        tray.setToolTip(arg.now_playing.three_line.line1 + ' - ' +  arg.now_playing.three_line.line2);
+        win.setOverlayIcon(img, 'Now Playing');
+        
+        // Set Wallpaper
+        setWallpaper('./art/wallpaper.png');
+    });
+
+    // Get Dimensions
+    ipcMain.on('get_dimensions', (event, arg) => {
+        win.webContents.send('window_dimensions', dimensions);
     });
 
     // Save Window Position
@@ -476,6 +526,14 @@ app.on('ready', () => {
         app.relaunch({args: process.argv.slice(1).concat(['--relaunch'])})
         app.exit(0)
     });
+
+    // Upde context menu
+    ipcMain.on('update_context_menu', (event, arg) => {
+        template[5].submenu[2].checked = arg.checked
+        contextMenu = Menu.buildFromTemplate(template);
+        tray.setContextMenu(contextMenu);
+        win.webContents.send('toggle_dashboard', {});
+    })
     
 });
 
@@ -488,7 +546,9 @@ app.on('activate', () => {
 
 // Before Quit
 app.on('before-quit', () => {
-    console.log('before-quit: fired')
+    console.log('before-quit: fired');
+    // Restore Original Wallpaper before exiting
+    setWallpaper('./art/originalWallpaper.png', 'setImmediate');
 });
 
 // Quit when all windows are closed.

@@ -21,11 +21,13 @@
         <script>
             // Electron
             const {webFrame,ipcRenderer,remote} = require('electron');
-            const saveFile = remote.require('electron-save-file');
             const download = remote.require('download-file');
- 
+            const ImageDataURI = require('image-data-uri');
+            const mergeImages = require('merge-images');
             let win = remote.getCurrentWindow();
             let currentZoomFactor = webFrame.getZoomFactor();
+            var appPath = remote.process.cwd();
+            console.log("remote:", remote.process.cwd())
         </script>
         <script src="assets/js/jquery.min.js"></script>
         <script src="assets/uikit/js/uikit.min.js"></script>

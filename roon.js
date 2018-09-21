@@ -14,8 +14,14 @@ if (config == null) {
 } else {
     config = JSON.parse(config);
 };
-
-console.log(config)
+noImageFixSize();
+if (config.my_settings.hide_dashboard) {
+    ipcRenderer.send('update_context_menu', {
+        label: 'Hide Dashboard',
+        checked: true
+    });
+}
+console.log('config', config)
 
 
 // Initialize Services
@@ -75,6 +81,7 @@ roon.init_services({
 svc_status.set_status(magicEigthBall(), false);
 
 // Initialize Vue Component
+var wallpaperTimer = null;
 var v = new Vue({
     el: "#roonapp",
     template: require('./player.html'),
@@ -94,6 +101,7 @@ var v = new Vue({
         }
     }, 
     created: function(){
+        getWindowDimensions();
         ipcRenderer.on('config_saved', (event, data) => {
             console.log('Config was saved!', data);
         });
@@ -124,6 +132,18 @@ var v = new Vue({
         ipcRenderer.on('open_settings', (event, data) => {
             this.view_settings = true;
         });
+        ipcRenderer.on('window_dimensions', (event, data) => {
+            config.my_settings.dimensions.width = data.width;
+            config.my_settings.dimensions.height = data.height;
+            console.log(data)
+            console.log(config)
+            roon.save_config('config', config);
+        });
+        ipcRenderer.on('toggle_dashboard', (event, data) => {
+            $body.toggleClass('hide-dashboard');
+            config.my_settings.hide_dashboard = $body.hasClass('hide-dashboard');
+            roon.save_config('config', config);
+        });
     },
     computed: {
         zone: function () {
@@ -146,25 +166,53 @@ var v = new Vue({
             roon.save_config("config", config);
             refresh_browse();
         },
-        'zones[current_zone_id].now_playing': function(val, oldval) {
-            var url = 'http://' + v.server_ip + ':' + v.server_port + '/api/image/' + v.zone.now_playing.image_key + '?scale=fit&width=500&height=500';
-            var options = {
-                directory: "art/",
-                filename: 'taskbar.png'
+        'zones[current_zone_id].now_playing.three_line.line1': function(val, oldval) {
+            var artistUrl,albumUrl,scale;
+            // Save Artist Art
+            if (v.zone.now_playing.artist_image_keys) {
+                artistUrl = 'http://' + v.server_ip + ':' + v.server_port + '/api/image/' + v.zone.now_playing.artist_image_keys[0] + '?format=image/png&scale=fill&width='+ config.my_settings.dimensions.width +'&height=' + config.my_settings.dimensions.height;
+            } else {
+                artistUrl =  false;
+            };
+            
+            if (v.zone.now_playing.image_key) {
+                scale = (config.my_settings.dimensions.height * 0.33).toFixed(0);
+                albumUrl = 'http://' + v.server_ip + ':' + v.server_port + '/api/image/' + v.zone.now_playing.image_key + '?format=image/png&scale=fill&width='+ scale +'&height='+ scale;
+            } else {
+                albumUrl =  false;
             };
 
-            download(url, options, function(err){
-                if (err) throw err
-                ipcRenderer.send('nowPlaying', v.zone);
-            })
+            var artistOptions = {
+                directory: "art/",
+                filename: 'artist.png'
+            };
 
-            /* Save Dialog:  should begins with 'http' or 'file://' or '/'
-            saveFile('http://' + this.server_ip + ':' + this.server_port + '/api/image/' + this.zone.now_playing.image_key + '?scale=fit&width=100&height=100') 
-                .then(() => {
-                    console.log('saved');
-                    ipcRenderer.send('nowPlaying', this.zone);
-                }).catch(err => console.error(err.stack));
-            */
+            var albumOptions = {
+                directory: "art/",
+                filename: 'album.png'
+            };
+            
+            if(artistUrl && albumUrl) {
+                download(artistUrl, artistOptions, function(err){
+                    if (err) { throw err };
+                    download(albumUrl, albumOptions, function(err){
+                        if (err) { throw err };
+                        createWallpaper([artistUrl, albumUrl]);
+                    })
+                })
+            } else if (artistUrl && !albumUrl) {
+                download(artistUrl, artistOptions, function(err){
+                    if (err) {throw err};
+                    createWallpaper([artistUrl, albumUrl]);
+                })
+            } else if (!artistUrl && albumUrl) {
+                download(albumUrl, albumOptions, function(err){
+                    if (err) { throw err };
+                    createWallpaper([artistUrl, albumUrl]);
+                })
+            } else {
+                createWallpaper([artistUrl, albumUrl]);
+            }
         }
     },
     methods: {
@@ -326,6 +374,10 @@ var v = new Vue({
 });
 
 // Utility Functions
+function getRandomInt(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+};
+
 function load_config(cfg) {
     ipcRenderer.send('load_config', cfg);
 };
@@ -335,13 +387,148 @@ function save_config(cfg) {
     roon.save_config("current_zone_id", cfg.current_zone_id);
 };
 
+function getWindowDimensions() {
+    console.log('getWindowDimensions()')
+    ipcRenderer.send('get_dimensions', {});
+};
+
 function update_nowPlaying() {
     ipcRenderer.send('nowPlaying', v.zone);
 }; 
 
+// Image and Canvas Helpers
+function createWallpaper(arr) {
+    var infoTxt    = "";
+    var artist     = (arr[0]) ? 'config/art/artist.png' : 'config/art/noartist.png';
+    var album      = (arr[1]) ? 'config/art/album.png' : 'config/art/noalbum.png'; 
+    var _y         = (config.my_settings.dimensions.height*0.66).toFixed(0) - 80;
+    var txtCanvasX = (config.my_settings.dimensions.height*0.33 + 50).toFixed(0);
+
+    // ##  Create text to png (line1 <track>, line3 <album>, line2 <artist>)
+    var canvas       = document.createElement('canvas');
+    var ctx          = canvas.getContext("2d");
+    var canvasWidth  = ((config.my_settings.dimensions.width - 50) - (config.my_settings.dimensions.height*0.33)).toFixed(0);
+    var canvasHeight = (config.my_settings.dimensions.height*0.33).toFixed(0);
+    canvas.width     = canvasWidth;
+    canvas.height    = canvasHeight; 
+
+    // Set background color
+    ctx.beginPath();
+    ctx.rect(0, 0, canvasWidth, canvasHeight);
+    ctx.fillStyle = 'rgba(0,0,0,0.65)';
+    ctx.fill();
+
+    // Track
+    ctx.font      = "60px Qicksand, Arial, sans-serif";
+    ctx.fillStyle = "white";
+    infoTxt       = truncateCanvasText(ctx, v.zone.now_playing.three_line.line1, canvasWidth - 50);
+    ctx.fillText(infoTxt,30,90);
+    
+    // Album
+    ctx.font      = "40px Qicksand, Arial, sans-serif";
+    ctx.fillStyle = "#e0e0e0";
+    infoTxt       = truncateCanvasText(ctx, v.zone.now_playing.three_line.line3, canvasWidth - 50);
+    ctx.fillText(infoTxt,30,160);
+    
+    // Artist
+    ctx.font      = "30px Qicksand, Arial, sans-serif";
+    ctx.fillStyle = "#e0e0e0";
+    infoTxt       = truncateCanvasText(ctx, v.zone.now_playing.three_line.line2, canvasWidth - 50);
+    ctx.fillText(infoTxt,30,200);
+
+    // Convert Canvas => DataURI => PNG
+    var b64 = canvas.toDataURL("image/png");
+    ImageDataURI.outputFile(b64, 'art/three_line.png').then(txtInfo => {
+        // ## Combine all images into one wallpaper
+            setTimeout(function(){
+                mergeImages([
+                    { src: artist, opacity: 1, x: 0, y: 0 }, 
+                    { src: album, opacity: 1, x: 50, y: _y }, 
+                    { src: 'config/art/three_line.png', opacity: 1, x: txtCanvasX, y: _y }
+                ], {
+                    width: config.my_settings.dimensions.width,
+                    height: config.my_settings.dimensions.height
+                }).then(wall => {
+                    ImageDataURI.outputFile(wall, 'art/wallpaper.png').then(res => {    
+                        console.log("\n\nwallpaper: ", res);
+                        if (wallpaperTimer) {
+                            clearTimeout(wallpaperTimer)
+                        };
+                        wallpaperTimer = setTimeout(function(){
+                            ipcRenderer.send('nowPlaying', v.zone);
+                        }, 4000)
+                    });
+                });
+            }, 1000)
+        
+    });
+};
+
+function noImageFixSize(){
+    var canvas = document.createElement('canvas');
+    var ctx = canvas.getContext("2d");
+    var b64, canvasWidth, canvasHeight;
+    
+    // ## 1.
+    // Fix No Artist Image (default_noartist.png => noartist.png)
+    canvasWidth     = (config.my_settings.dimensions.width).toFixed(0);
+    canvasHeight    = (config.my_settings.dimensions.height).toFixed(0);
+    canvas.width    = canvasWidth;
+    canvas.height   = canvasHeight;
+    makeImg('config/art/default_noartist.png');
+
+
+    function makeImg(src) {
+        var base_image = new Image();
+        base_image.src = src;
+        base_image.onload = function(){
+            //ctx.drawImage(base_image, 0, 0);
+            ctx.drawImage(
+                base_image, 0, 0, base_image.width, base_image.height, // source rectangle
+                0, 0, canvas.width, canvas.height // destination rectangle
+            ); 
+
+            b64 = canvas.toDataURL("image/png");
+            if (src == 'config/art/default_noartist.png') {
+                ImageDataURI.outputFile(b64, 'art/noartist.png').then(noartist => {
+                    console.log("noartist.png ready");
+                    // ## 2.
+                    // Fix No Album Image (default_noalbum.png => noalbum.png)
+                    canvasWidth     = (config.my_settings.dimensions.height*0.33).toFixed(0);
+                    canvasHeight    = (config.my_settings.dimensions.height*0.33).toFixed(0);
+                    canvas.width    = canvasWidth;
+                    canvas.height   = canvasHeight;
+                    makeImg('config/art/default_noalbum.png');
+                });
+            } else {
+                ImageDataURI.outputFile(b64, 'art/noalbum.png').then(noalbum => {
+                    console.log("noalbum.png ready")
+                });
+            }
+        }
+    };
+};
+
+function truncateCanvasText(ctx, str, maxWidth) {
+    var width = ctx.measureText(str).width;
+    var ellipsis = '…';
+    var ellipsisWidth = ctx.measureText(ellipsis).width;
+    if (width<=maxWidth || width<=ellipsisWidth) {
+        return str;
+    } else {
+        var len = str.length;
+        while (width>=maxWidth-ellipsisWidth && len-->0) {
+            str = str.substring(0, len);
+            width = ctx.measureText(str).width;
+        }
+        return str+ellipsis;
+    }
+};
+
+// Roon Helper Functions
 function magicEigthBall() {
     return config.my_settings.eightball[Math.floor(Math.random() * (config.my_settings.eightball.length - 0 + 1)) + 0];
-}
+};
 
 function refresh_browse(opts) {
     opts = Object.assign({
