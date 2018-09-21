@@ -10,10 +10,29 @@
     "dev": "watchify -d  roon.js -o roon_bundle.js -t partialify -u xml2js -u ws",
     "package-win-asar": "electron-packager . Electroon --overwrite --asar --platform=win32 --arch=x64 --icon=assets/img/roon.ico --prune=true --out=../packages --version-string.CompanyName=CE --version-string.FileDescription=CE --version-string.ProductName=\"Electroon\"",
     "package-win": "electron-packager . Electroon --overwrite --platform=win32 --arch=x64 --icon=assets/img/roon.ico --prune=true --out=../packages --version-string.CompanyName=CE --version-string.FileDescription=CE --version-string.ProductName=\"Electroon\"",
-    "package-mac": "electron-packager . Electroon --overwrite --platform=darwin --arch=x64 --icon=assets/img/roon.png --prune=true --out=packages",
-    "package-linux-asar": "electron-packager . Electroon --overwrite --asar --platform=linux --arch=x64 --icon=assets/img/roon.png --prune=true --out=packages",
-    "package-linux": "electron-packager . Electroon --overwrite --platform=linux --arch=x64 --icon=assets/img/roon.png --prune=true --out=packages"
+    "package-mac-asar": "electron-packager . Electroon --overwrite --asar --platform=darwin --arch=x64 --icon=assets/img/roon.png --prune=true --out=../packages",
+    "package-mac": "electron-packager . Electroon --overwrite --platform=darwin --arch=x64 --icon=assets/img/roon.png --prune=true --out=../packages",
+    "package-linux-asar": "electron-packager . Electroon --overwrite --asar --platform=linux --arch=x64 --icon=assets/img/roon.png --prune=true --out=../packages",
+    "package-linux": "electron-packager . Electroon --overwrite --platform=linux --arch=x64 --icon=assets/img/roon.png --prune=true --out=../packages"
   },
+  "extraFiles": [
+    {
+      "from": "roon_bundle.js",
+      "to": "./roon_bundle.js"
+    },
+    {
+      "from": "config",
+      "to": "."
+    },
+    {
+      "from": "config/art",
+      "to": "./config/art"
+    },
+    {
+      "from": "config/winstate",
+      "to": "./config/winsatate"
+    }
+  ],
   "author": "Ian Celing",
   "license": "ISC",
   "dependencies": {
@@ -21,12 +40,16 @@
     "babel-preset-stage-2": "^6.24.1",
     "browserify": "^16.2.2",
     "browserify-fs": "^1.0.0",
+    "download-file": "^0.1.5",
+    "electron-save-file": "^1.0.2",
     "electron-window-state": "^5.0.1",
     "node-roon-api": "github:roonlabs/node-roon-api",
     "node-roon-api-browse": "github:roonlabs/node-roon-api-browse",
     "node-roon-api-image": "github:roonlabs/node-roon-api-image",
     "node-roon-api-status": "github:roonlabs/node-roon-api-status",
     "node-roon-api-transport": "github:roonlabs/node-roon-api-transport",
+    "node-run-cmd": "^1.0.1",
+    "path": "^0.12.7",
     "vue": "^1.0.28",
     "watchify": "^3.11.0"
   },

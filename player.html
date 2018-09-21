@@ -1,169 +1,203 @@
 <div>
-    <i class="material-icons uk-text-muted enable-dragging" onclick="api.set_draggable(true);">drag_handle</i>
-    <template v-if='status == "connecting"'>
-        <div class="uk-text-center">
-            Connecting...<br>
-            <small v-if='paired == true' class="uk-text-muted">Plugin is connecting</small>
-            <small v-else class="uk-text-muted">Please enable extension in Roon settings</small>
+    <div class="uk-grid uk-grid-small uk-grid-width-1-1" data-uk-grid-margin="">
+        <div>
+            <i class="material-icons uk-text-muted enable-dragging" onclick="api.set_draggable(true);">drag_handle</i>
+            <template v-if='!view_settings && status == "connecting"'>
+                <div class="uk-text-center">
+                    Connecting...<br>
+                    <small v-if='paired == true' class="uk-text-muted">Plugin is connecting</small>
+                    <small v-else class="uk-text-muted">Please enable extension in Roon settings</small>
+                    <div class="uk-margin-large-top">
+                        <form>
+                            <label>Server IP</label><br>
+                            <input v-model="server_ip" @input="change_server_ip" type="text" placeholder="localhost" :value="server_ip" style="background: rgba(0,0,0,0.9); color: #38f; border: none; outline: none; padding: 3px;"/><br>
+                            <label>Server Port</label><br>
+                            <input v-model="server_port" @input="change_server_port" type="text" placeholder="9100" :value="server_port" style="background: rgba(0,0,0,0.9); color: #38f; border: none; outline: none; padding: 3px;"/><br>
+                            <button @click.prevent="update_settings" style="background: rgba(0,0,0,0.9); color: #38f; border: none; outline: none; padding: 3px;">Submit</button>
+                        </form>
+                    </div>
+                </div>
+            </template>
         </div>
-    </template>
-
-    <template v-if='status == "disconnected"'>
-        <div class="uk-text-center">
-            Disconnected...<br>
-            <small v-if='paired == true' class="uk-text-muted">Lost connection to core</small>
-            <small v-else class="uk-text-muted">Plugin has been disabled in Roon settings</small>
+        <div>
+            <template v-if='view_settings'>
+                <div class="uk-text-center">
+                    Settings<br>
+                    <small v-if='paired == true' class="uk-text-muted">Editing config.json</small>
+                    <small v-else class="uk-text-muted">Available roon settings</small>
+                    <div class="uk-margin-medium-top uk-margin-large-bottom">
+                        <form>
+                            <label>Server IP</label><br>
+                            <input v-model="server_ip" @input="change_server_ip" type="text" placeholder="localhost" :value="server_ip" style="background: rgba(0,0,0,0.9); color: #38f; border: none; outline: none; padding: 3px;"/><br><br>
+                            <label>Server Port</label><br>
+                            <input v-model="server_port" @input="change_server_port" type="text" placeholder="9100" :value="server_port" style="background: rgba(0,0,0,0.9); color: #38f; border: none; outline: none; padding: 3px;"/><br><br>
+                            <button @click.prevent="cancel_settings" style="background: rgba(0,0,0,0.9); color: #38f; border: none; outline: none; padding: 3px;">Cancel</button>&emsp;
+                            <button @click.prevent="update_settings" style="background: rgba(0,0,0,0.9); color: #38f; border: none; outline: none; padding: 3px;">Submit</button>
+                        </form>
+                    </div>
+                </div>
+            </template>
         </div>
-    </template>
+        <div>
+            <template v-if='!view_settings && status == "disconnected"'>
+                <div class="uk-text-center">
+                    Disconnected...<br>
+                    <small v-if='paired == true' class="uk-text-muted">Lost connection to core</small>
+                    <small v-else class="uk-text-muted">Plugin has been disabled in Roon settings</small>
+                </div>
+            </template>
+        </div>
+        <div>
+            <template v-if='!view_settings && status == "connected"'>
 
-    <template v-if='status == "connected"'>
-
-            <div class="uk-grid uk-grid-small uk-margin-small-bottom" data-uk-grid-margin="">        
-                <div class="uk-width-1-2">
-                    <select v-model="current_zone_id" style="background: rgba(0,0,0,0.9); color: #38f; border: none; outline: none; padding: 3px;">
-                        <option v-for="zone in zones" :value="zone.zone_id">{{ zone.display_name }}</option>
-                    </select>
-                </div>
-                <div class="uk-width-1-2 uk-text-center hidden-small">
-                    <div v-if='zone' class='zonetitle uk-text-small uk-text-truncate'>
-                        <small class="uk-text-muted" data-uk-tooltip="{pos: 'top'}" title="{{zone.display_name}}">{{status}} &emsp; ({{zone.state}})</small>
-                    </div>
-                </div>
-                <div class="uk-width-1-2 uk-text-left visible-small">
-                    <img class="uk-float-left" style="width: 30px; height: 30px; margin-left: -10px; margin-right: 10px;" v-if='zone.now_playing.image_key' :src="'http://' + server_ip + ':' + server_port + '/api/image/' + zone.now_playing.image_key + '?scale=fit&width=1000&height=1000'"/>
-                    <div @click="toggleTrackAlbumTitle" class="line1 pointer uk-animation uk-animation-middle-left uk-animation-scale-up uk-text-truncate">{{zone.now_playing.three_line.line1}}</div>
-                    <div @click="toggleTrackAlbumTitle" class="line2 pointer uk-animation uk-animation-middle-left uk-animation-scale-up uk-text-truncate uk-hidden">{{zone.now_playing.three_line.line3}}</div>
-                    <div class="default uk-text-truncate uk-text-muted uk-text-small">{{zone.now_playing.three_line.line2}}</div>
-                </div>
-            </div>
-            <div class="uk-grid uk-grid-small main-grid" data-uk-grid-margin="">        
-                <div class="uk-width-1-1 hidden-small">
-                    <div class="album {{zone.state == 'stopped' ? '' : 'nowplaying'}}" v-if='zone'>
-                        <div class="photo" v-if='zone.now_playing.artist_image_keys' :style='{ "background-image": "url(http://" + server_ip + ":" + server_port + "/api/image/" + zone.now_playing.artist_image_keys[0] + "?scale=fit&width=1000&height=1000)" }'></div>
-                        <div class="photo" v-else style="background-image: url(assets/img/noimage.jpg)"></div>
-                        <img v-if='zone.now_playing.image_key' :src="'http://' + server_ip + ':' + server_port + '/api/image/' + zone.now_playing.image_key + '?scale=fit&width=1000&height=1000'"/>
-                        <div class="infos">
-                            <div class="song">
-                                <span @click="toggleTrackAlbumTitle" class="line1 pointer uk-animation uk-animation-middle-left uk-animation-scale-up uk-text-truncate">{{zone.now_playing.three_line.line1}}</span>
-                                <span @click="toggleTrackAlbumTitle" class="line2 pointer uk-animation uk-animation-middle-left uk-animation-scale-up uk-text-truncate uk-hidden">{{zone.now_playing.three_line.line3}}</span>
-                                <small class="line3 default uk-text-truncate">{{zone.now_playing.three_line.line2}}</small>
+                    <div class="uk-grid uk-grid-small uk-margin-small-bottom" data-uk-grid-margin="">        
+                        <div class="uk-width-1-2">
+                            <select v-model="current_zone_id" style="background: rgba(0,0,0,0.9); color: #38f; border: none; outline: none; padding: 3px;">
+                                <option v-for="zone in zones" :value="zone.zone_id">{{ zone.display_name }}</option>
+                            </select>
+                        </div>
+                        <div class="uk-width-1-2 uk-text-center hidden-small">
+                            <div v-if='zone' class='zonetitle uk-text-small uk-text-truncate'>
+                                <small class="uk-text-muted" data-uk-tooltip="{pos: 'top'}" title="{{zone.display_name}}">{{status}} &emsp; ({{zone.state}})</small>
                             </div>
                         </div>
+                        <div class="uk-width-1-2 uk-text-left visible-small">
+                            <img class="uk-float-left" style="width: 30px; height: 30px; margin-left: -10px; margin-right: 10px;" v-if='zone.now_playing.image_key' :src="'http://' + server_ip + ':' + server_port + '/api/image/' + zone.now_playing.image_key + '?scale=fit&width=1000&height=1000'"/>
+                            <div @click="toggleTrackAlbumTitle" class="line1 pointer uk-animation uk-animation-middle-left uk-animation-scale-up uk-text-truncate">{{zone.now_playing.three_line.line1}}</div>
+                            <div @click="toggleTrackAlbumTitle" class="line2 pointer uk-animation uk-animation-middle-left uk-animation-scale-up uk-text-truncate uk-hidden">{{zone.now_playing.three_line.line3}}</div>
+                            <div class="default uk-text-truncate uk-text-muted uk-text-small">{{zone.now_playing.three_line.line2}}</div>
+                        </div>
                     </div>
-                </div>
-                <div class="uk-width-1-1">
-                    <div class="dashboard">
-
-                        <div class="list hidden-small">
-                            <div id="listBtn" class="list-btn" @click="toggleList"><span></span></div>
-                        </div>
-
-                        <div class="player" v-if='zone'>
-                            <div v-if='zone.state == "stopped" || zone.state == "loading"' class="time default"><small class="current default">&mdash; /</small> <small class="duration default">&mdash;</small></div>
-                            <div v-else class="time default"><small class="current default">{{to_time(zone.now_playing.seek_position)}} /</small> <small class="duration default">{{to_time(zone.now_playing.length)}}</small></div>
-                            <div class="time-rail pointer" @click.prevent="transport_seek" v-on:mousemove="hover_show_seek_time" v-on:mouseleave="hover_hide_seek_time(false)">
-                                <div class="thumb" :style='{ left: zone.now_playing.seek_position / zone.now_playing.length * 100 + "%" }'></div>
-                                <div class="track"></div>
-                                <div class="time-rail-seek"></div>
-                            </div>
-                        </div>
-                        <div class="player" v-else>
-                            <div class="time"><small class="current">&mdash;</small> / <small class="duration">&mdash;</small></div>
-                            <div class="time-rail">
-                                <div class="thumb" style='left: 0%;'></div>
-                                <div class="track"></div>
-                            </div>
-                        </div>
-
-                        <div v-if='zone' class="action-button">
-                            <a class="radio" @click="transport_change_settings('auto_radio')"><i class="material-icons {{ zone.settings.auto_radio ? 'uk-text-primary' : 'md-color-white'}}">radio</i></a>
-                            <a class="random" @click="transport_change_settings('shuffle')"><i class="material-icons {{ zone.settings.shuffle ? 'uk-text-primary' : 'md-color-white'}}">shuffle</i></a>
-                            <a class="prev" @click="transport_previous"><i class="material-icons md-color-white">fast_rewind</i></a>
-                            <a class="play-pause" @click="transport_playpause"><i class="material-icons md-icon md-color-white">{{ zone.state == 'playing' ? 'pause' : 'play_arrow'}}</i></a>
-                            <a class="next" @click="transport_next"><i class="material-icons md-color-white">fast_forward</i></a>
-                            <a class="stop" @click="transport_stop"><i class="material-icons md-color-white">stop</i></a>
-                            <a class="volume" @click="show_volume">
-                                <i class="material-icons md-color-white">volume_up</i>
-                                <input @change="transport_volume" class="volume-input" type="number" min="0" max="100" value="">
-                            </a>
-                        </div>
-                        <div v-else class="action-button">
-                            <a class="radio"><i class="material-icons md-color-white">radio</i></a>
-                            <a class="random"><i class="material-icons md-color-white">shuffle</i></a>
-                            <a class="prev"><i class="material-icons md-color-white">fast_rewind</i></a>
-                            <a class="play-pause"><i class="material-icons md-icon md-color-white">block</i></a>
-                            <a class="next"><i class="material-icons md-color-white">fast_forward</i></a>
-                            <a class="stop"><i class="material-icons md-color-white">stop</i></a>
-                            <a class="volume"><i class="material-icons md-color-white">volume_up</i></a>
-                        </div>
-
-                    </div>
-                </div>
-            </div>   
-            <div v-if='list' class='lists browser hidden-small'>     
-                <div class="uk-grid uk-grid-small label" data-uk-grid-margin="">        
-                    <div class="uk-width-3-10">
-                        <img v-if='list.image_key' style='width: 95px; object-fit: cover; object-position: center;' :src="'http://' + server_ip + ':' + server_port + '/api/image/' + list.image_key + '?scale=fit&width=500&height=500'">
-                        <img v-else style='width: 95px; object-fit: cover; object-position: center;' src="assets/img/roon.png">
-                    </div>
-                    <div class="uk-width-7-10">
-                        <div class="uk-grid uk-grid-small" data-uk-grid-margin="">
-                            <div class="uk-width-1-1 uk-margin-small-bottom uk-text-truncate browsertitle">{{list.title}}</div>
-                            <div class="uk-width-1-1 uk-margin-small-bottom uk-text-truncate browsersubtitle">{{list.subtitle}}</div>
-                            <div class="uk-width-1-1 uk-margin-small-bottom">
-                                <div class="box">
-                                    <a href="back" v-if='list.level != 0' @click.prevent='list_back()'><i class="md-icon material-icons md-color-white">arrow_back</i></a>
-                                    <a href="home" v-if='list.level != 0' @click.prevent='list_home()'><i class="md-icon material-icons md-color-white">home</i></a>
-                                    <a href="refresh" @click.prevent='list_refresh()'><i class="md-icon material-icons md-color-white">refresh</i></a>
-                                    <div v-if='list.count != items.length' class="uk-grid uk-grid-small">
-                                        <a href='previouspage' @click.prevent='list_prev_page'><i class="md-icon material-icons uk-text-muted">keyboard_arrow_left</i></a>
-                                        <small>{{listoffset+1}}-{{listoffset + items.length}} of {{list.count}}</small>
-                                        <a href='nextpage' @click.prevent='list_next_page'><i class="md-icon material-icons uk-text-muted">keyboard_arrow_right</i></a>
+                    <div class="uk-grid uk-grid-small main-grid" data-uk-grid-margin="">        
+                        <div class="uk-width-1-1 hidden-small">
+                            <div class="album {{zone.state == 'stopped' ? '' : 'nowplaying'}}" v-if='zone'>
+                                <div class="photo" v-if='zone.now_playing.artist_image_keys' :style='{ "background-image": "url(http://" + server_ip + ":" + server_port + "/api/image/" + zone.now_playing.artist_image_keys[0] + "?scale=fit&width=1000&height=1000)" }'></div>
+                                <div class="photo" v-else style="background-image: url(assets/img/noimage.jpg)"></div>
+                                <img v-if='zone.now_playing.image_key' :src="'http://' + server_ip + ':' + server_port + '/api/image/' + zone.now_playing.image_key + '?scale=fit&width=1000&height=1000'"/>
+                                <div class="infos">
+                                    <div class="song">
+                                        <span @click="toggleTrackAlbumTitle" class="line1 pointer uk-animation uk-animation-middle-left uk-animation-scale-up uk-text-truncate">{{zone.now_playing.three_line.line1}}</span>
+                                        <span @click="toggleTrackAlbumTitle" class="line2 pointer uk-animation uk-animation-middle-left uk-animation-scale-up uk-text-truncate uk-hidden">{{zone.now_playing.three_line.line3}}</span>
+                                        <small class="line3 default uk-text-truncate">{{zone.now_playing.three_line.line2}}</small>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                </div>
+                        <div class="uk-width-1-1">
+                            <div class="dashboard">
 
-                <ul class='browseitems'>
-                    <li v-for='item in items' class='browseitem'>
-                        <form v-if='item.input_prompt' action='submit' @submit.prevent='list_input(item)' class='browseiteminput'>
-                            <img style='float: right; margin: 0 1em;' v-if='item.image_key' :src="'http://' + server_ip + ':' + server_port + '/api/image/' + item.image_key + '?scale=fit&width=100&height=100'">
-                            <div>{{item.input_prompt.prompt}}</div>
-                            <div>
-                                <input type='{{item.input_prompt.is_password ? "password" : "text"}}' v-model='item.input_prompt.value'>
-                                <input type='submit' value='{{item.input_prompt.action}}' @click.prevent='list_input(item)'>
+                                <div class="list hidden-small">
+                                    <div id="listBtn" class="list-btn" @click="toggleList"><span></span></div>
+                                </div>
+
+                                <div class="player" v-if='zone'>
+                                    <div v-if='zone.state == "stopped" || zone.state == "loading"' class="time default"><small class="current default">&mdash; /</small> <small class="duration default">&mdash;</small></div>
+                                    <div v-else class="time default"><small class="current default">{{to_time(zone.now_playing.seek_position)}} /</small> <small class="duration default">{{to_time(zone.now_playing.length)}}</small></div>
+                                    <div class="time-rail pointer" @click.prevent="transport_seek" v-on:mousemove="hover_show_seek_time" v-on:mouseleave="hover_hide_seek_time(false)">
+                                        <div class="thumb" :style='{ left: zone.now_playing.seek_position / zone.now_playing.length * 100 + "%" }'></div>
+                                        <div class="track"></div>
+                                        <div class="time-rail-seek"></div>
+                                    </div>
+                                </div>
+                                <div class="player" v-else>
+                                    <div class="time"><small class="current">&mdash;</small> / <small class="duration">&mdash;</small></div>
+                                    <div class="time-rail">
+                                        <div class="thumb" style='left: 0%;'></div>
+                                        <div class="track"></div>
+                                    </div>
+                                </div>
+
+                                <div v-if='zone' class="action-button">
+                                    <a class="radio" @click="transport_change_settings('auto_radio')"><i class="material-icons {{ zone.settings.auto_radio ? 'uk-text-primary' : 'md-color-white'}}">radio</i></a>
+                                    <a class="random" @click="transport_change_settings('shuffle')"><i class="material-icons {{ zone.settings.shuffle ? 'uk-text-primary' : 'md-color-white'}}">shuffle</i></a>
+                                    <a class="prev" @click="transport_previous"><i class="material-icons md-color-white">fast_rewind</i></a>
+                                    <a class="play-pause" @click="transport_playpause"><i class="material-icons md-icon md-color-white">{{ zone.state == 'playing' ? 'pause' : 'play_arrow'}}</i></a>
+                                    <a class="next" @click="transport_next"><i class="material-icons md-color-white">fast_forward</i></a>
+                                    <a class="stop" @click="transport_stop"><i class="material-icons md-color-white">stop</i></a>
+                                    <a class="volume" @click="show_volume">
+                                        <i class="material-icons md-color-white">volume_up</i>
+                                        <input @change="transport_volume" class="volume-input" type="number" min="0" max="100" value="">
+                                    </a>
+                                </div>
+                                <div v-else class="action-button">
+                                    <a class="radio"><i class="material-icons md-color-white">radio</i></a>
+                                    <a class="random"><i class="material-icons md-color-white">shuffle</i></a>
+                                    <a class="prev"><i class="material-icons md-color-white">fast_rewind</i></a>
+                                    <a class="play-pause"><i class="material-icons md-icon md-color-white">block</i></a>
+                                    <a class="next"><i class="material-icons md-color-white">fast_forward</i></a>
+                                    <a class="stop"><i class="material-icons md-color-white">stop</i></a>
+                                    <a class="volume"><i class="material-icons md-color-white">volume_up</i></a>
+                                </div>
+
                             </div>
-                            <br v-if='item.image_key' style='clear:both'/>
-                        </form>
-                        <div v-else @click.prevent='list_item(item)' class='browseitemnormal' >
-                            <img style='float: right; margin: 0 1em;' v-if='item.image_key' :src="'http://' + server_ip + ':' + server_port + '/api/image/' + item.image_key + '?scale=fit&width=100&height=100'">
-                            <div class='browseitemtitle uk-text-truncate'>{{item.title}}</div>
-                            <div class='browseitemsubtitle uk-text-truncate uk-text-small uk-text-muted'>{{item.subtitle}}</div>
-                            <br v-if='item.image_key' style='clear:both'/>
                         </div>
-                    </li>
-                </ul>
+                    </div>   
+                    <div v-if='list' class='lists browser hidden-small'>     
+                        <div class="uk-grid uk-grid-small label" data-uk-grid-margin="">        
+                            <div class="uk-width-3-10">
+                                <img v-if='list.image_key' style='width: 95px; object-fit: cover; object-position: center;' :src="'http://' + server_ip + ':' + server_port + '/api/image/' + list.image_key + '?scale=fit&width=500&height=500'">
+                                <img v-else style='width: 95px; object-fit: cover; object-position: center;' src="assets/img/roon.png">
+                            </div>
+                            <div class="uk-width-7-10">
+                                <div class="uk-grid uk-grid-small" data-uk-grid-margin="">
+                                    <div class="uk-width-1-1 uk-margin-small-bottom uk-text-truncate browsertitle">{{list.title}}</div>
+                                    <div class="uk-width-1-1 uk-margin-small-bottom uk-text-truncate browsersubtitle">{{list.subtitle}}</div>
+                                    <div class="uk-width-1-1 uk-margin-small-bottom">
+                                        <div class="box">
+                                            <a href="back" v-if='list.level != 0' @click.prevent='list_back()'><i class="md-icon material-icons md-color-white">arrow_back</i></a>
+                                            <a href="home" v-if='list.level != 0' @click.prevent='list_home()'><i class="md-icon material-icons md-color-white">home</i></a>
+                                            <a href="refresh" @click.prevent='list_refresh()'><i class="md-icon material-icons md-color-white">refresh</i></a>
+                                            <div v-if='list.count != items.length' class="uk-grid uk-grid-small">
+                                                <a href='previouspage' @click.prevent='list_prev_page'><i class="md-icon material-icons uk-text-muted">keyboard_arrow_left</i></a>
+                                                <small>{{listoffset+1}}-{{listoffset + items.length}} of {{list.count}}</small>
+                                                <a href='nextpage' @click.prevent='list_next_page'><i class="md-icon material-icons uk-text-muted">keyboard_arrow_right</i></a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
 
-            </div>           
-            <div v-else class='lists browser hidden-small'>     
-                <div class="label">
-                    <div class="uk-grid uk-grid-small uk-margin-remove uk-padding-remove">
-                        <div class="uk-width-2-10 uk-padding-remove" style="border: 1px solid #353535;">
-                            <img style='width: 100%; height: 65px;' src="assets/img/roon.png">
+                        <ul class='browseitems'>
+                            <li v-for='item in items' class='browseitem'>
+                                <form v-if='item.input_prompt' action='submit' @submit.prevent='list_input(item)' class='browseiteminput'>
+                                    <img style='float: right; margin: 0 1em;' v-if='item.image_key' :src="'http://' + server_ip + ':' + server_port + '/api/image/' + item.image_key + '?scale=fit&width=100&height=100'">
+                                    <div>{{item.input_prompt.prompt}}</div>
+                                    <div>
+                                        <input type='{{item.input_prompt.is_password ? "password" : "text"}}' v-model='item.input_prompt.value'>
+                                        <input type='submit' value='{{item.input_prompt.action}}' @click.prevent='list_input(item)'>
+                                    </div>
+                                    <br v-if='item.image_key' style='clear:both'/>
+                                </form>
+                                <div v-else @click.prevent='list_item(item)' class='browseitemnormal' >
+                                    <img style='float: right; margin: 0 1em;' v-if='item.image_key' :src="'http://' + server_ip + ':' + server_port + '/api/image/' + item.image_key + '?scale=fit&width=100&height=100'">
+                                    <div class='browseitemtitle uk-text-truncate'>{{item.title}}</div>
+                                    <div class='browseitemsubtitle uk-text-truncate uk-text-small uk-text-muted'>{{item.subtitle}}</div>
+                                    <br v-if='item.image_key' style='clear:both'/>
+                                </div>
+                            </li>
+                        </ul>
+
+                    </div>           
+                    <div v-else class='lists browser hidden-small'>     
+                        <div class="label">
+                            <div class="uk-grid uk-grid-small uk-margin-remove uk-padding-remove">
+                                <div class="uk-width-2-10 uk-padding-remove" style="border: 1px solid #353535;">
+                                    <img style='width: 100%; height: 65px;' src="assets/img/roon.png">
+                                </div>
+                                <div class="uk-width-4-10 uk-text-truncate browsertitle" style="padding-left: 10px">&nbsp;</div>
+                                <div class="uk-width-4-10 uk-text-truncate browsersubtitle" style="padding-left: 5px">&nbsp;</div>
+                            </div>
                         </div>
-                        <div class="uk-width-4-10 uk-text-truncate browsertitle" style="padding-left: 10px">&nbsp;</div>
-                        <div class="uk-width-4-10 uk-text-truncate browsersubtitle" style="padding-left: 5px">&nbsp;</div>
+                        <div class="box">
+                            <a href="back"><i class="md-icon material-icons md-color-white">arrow_back</i></a>
+                            <a href="home"><i class="md-icon material-icons md-color-white">home</i></a>
+                            <a href="refresh"><i class="md-icon material-icons md-color-white">refresh</i></a>
+                        </div>
+                        <div style="min-height: 32px; height: 32px; position: relative; left: 80px;">&nbsp;</div>
+                        <ul class='browseitems'><li class='browseitem'>No items to display</li></ul>
                     </div>
-                </div>
-                <div class="box">
-                    <a href="back"><i class="md-icon material-icons md-color-white">arrow_back</i></a>
-                    <a href="home"><i class="md-icon material-icons md-color-white">home</i></a>
-                    <a href="refresh"><i class="md-icon material-icons md-color-white">refresh</i></a>
-                </div>
-                <div style="min-height: 32px; height: 32px; position: relative; left: 80px;">&nbsp;</div>
-                <ul class='browseitems'><li class='browseitem'>No items to display</li></ul>
-            </div>
-    </template>
+            </template>
+        </div>
+    </div>
 </div>

@@ -1,19 +1,18 @@
 const fs                     = require('fs');
-var config                   = require('./config/config.json');
 const windowStateKeeper      = require('electron-window-state');
 const electron               = require('electron');
 const {Menu, Tray, ipcMain } = require('electron');
 const nativeImage            = require('electron').nativeImage;
+const path                   = require('path');
+const nrc                    = require('node-run-cmd');
 const app                    = electron.app;
 const BrowserWindow          = electron.BrowserWindow;
-
 var mainWindowState          = null;
 var bgWindowState            = null;
 var icons                    = generateIcons();
-let debug                    = config.my_settings.debug;
+let debug                    = false;
+//var config = require('./config/config.json');
 
-// Keep a global reference of the window object, if you don't, the window will
-// be closed automatically when the JavaScript object is garbage collected.
 let splash = null;
 let bgwin = null;
 let win = null;
@@ -24,13 +23,14 @@ let contextMenu = null;
 //app.commandLine.appendSwitch('high-dpi-support', 'true');
 //app.commandLine.appendSwitch('force-device-scale-factor', '1.5');
 
+console.log(app.getAppPath());
+console.log(__dirname);
+
 // Change to working directory
 try {
     process.chdir(process.cwd()+'/config');
-    if (debug) {
-        console.log('\nNew working directory:\n' + process.cwd());
-        testFsModule();
-    }
+    console.log('\nNew working directory:\n' + process.cwd());
+    testFsModule();
 } catch (err) {
     console.error(`chdir: ${err}`);
 }
@@ -64,9 +64,10 @@ function createWindow () {
         transparent: true,
         frame: false,
         resizeable: false,
-        skipTaskbar: true,
+        skipTaskbar: false,
         maximizable: false,
-        minimizable: false
+        minimizable: false,
+        icon: icons.roon
     });
 
     win.setMinimumSize(350, 150);
@@ -81,6 +82,7 @@ function createWindow () {
             splash.close();
             win.show();
             win.focus();
+            setTaskbarBtn()
             //win.webContents.openDevTools() // Open the DevTools.
         }, 2000)
     })
@@ -140,7 +142,6 @@ function createBGWindow() {
 
     bgwin = new BrowserWindow({
         'node-integration': false,
-        darkTheme: config.my_settings.darkTheme,
         x: bgWindowState.x || null,
         y: bgWindowState.y || null,
         width: mainWindowState.width || bgWindowState.defaultWidth, 
@@ -176,6 +177,33 @@ function createBGWindow() {
     })
 };
   
+// Create Taskbar Buttons
+function setTaskbarBtn() {
+    win.setThumbarButtons([]);
+    win.setThumbarButtons([
+        {
+          tooltip: 'Previous Track',
+          icon: path.resolve(`${__dirname}/assets/img/previous.png`),
+          click: function() {
+              win.webContents.send('transport_req', {control: 'prev'})
+          }
+        },
+        {
+          tooltip: 'Play',
+          icon: path.resolve(`${__dirname}/assets/img/play.png`),
+          click: function() {
+              win.webContents.send('transport_req', {control: 'play'})
+          }
+        },
+        {
+          tooltip: 'Next Track',
+          icon: path.resolve(`${__dirname}/assets/img/next.png`),
+          click: function() {
+              win.webContents.send('transport_req', {control: 'next'})
+          }
+        }
+      ]);
+};
 
 // Default dimensions
 function loadDimensions() {
@@ -279,7 +307,6 @@ app.on('ready', () => {
 
     // Build tray icon
     tray = new Tray(icons["roon"]);
-    
     contextMenu = Menu.buildFromTemplate([
         {
             label: "Speed Dial", 
@@ -350,6 +377,13 @@ app.on('ready', () => {
             label  : "More...",
             submenu: [
                 {
+                    label: 'FullScreen', 
+                    type: 'checkbox', 
+                    click: function(){ 
+                        (win.isFullScreen()) ? win.setFullScreen(false) : win.setFullScreen(true);
+                    }
+                },
+                {
                     label: 'Maximize', 
                     type: 'checkbox', 
                     click: function(){ 
@@ -371,10 +405,11 @@ app.on('ready', () => {
                     }
                 },
                 {
-                    label: 'Show in Taskbar', 
+                    label: 'Relaunch', 
                     type: 'checkbox', 
                     click: function(){
-                        win.skipTaskbar() ? win.setSkipTaskbar(false) : win.setSkipTaskbar(true);
+                        app.relaunch({args: process.argv.slice(1).concat(['--relaunch'])})
+                        app.exit(0)
                     }
                 },
                 {
@@ -384,6 +419,13 @@ app.on('ready', () => {
                         win.toggleDevTools();
                     }
                 },
+                {
+                    label: 'Settings', 
+                    type: 'normal', 
+                    click: function(){
+                        win.webContents.send('open_settings', {});   
+                    }
+                }
             ]
         },
         {
@@ -394,34 +436,20 @@ app.on('ready', () => {
             }
         }
     ]);
-    
     tray.setToolTip('Roon Mini-Controller');
     tray.setContextMenu(contextMenu);
-    
     tray.on('click', (event) => {
-        win.isVisible() ? win.hide() : win.show();
+        win.isMinimized() ? win.restore() && setTaskbarBtn() : win.minimize();
     });
+
 
     // Get current zone details
     ipcMain.on('nowPlaying', (event, arg) => {
-        console.log('\nnowPlaying', arg);
-        tray.setTitle(arg.now_playing.three_line.line1);
+        console.log('\n\nnowPlaying', arg);
+        var img = nativeImage.createFromPath('./art/taskbar.png');
+        tray.setToolTip(arg.now_playing.three_line.line1 + ' - ' +  arg.now_playing.three_line.line3 + ' - ' +  arg.now_playing.three_line.line2);
+        win.setOverlayIcon(img, 'Now Playing')
         //event.sender.send('nowPlaying', arg)
-    });
-
-    // Save Config
-    ipcMain.on('save_config', (event, arg) => {
-        let data = JSON.stringify(arg, null, 4);
-        fs.writeFile('config.json', data, function() {
-            event.sender.send('config_saved', data);
-        });
-    });
-
-    // Load Config
-    ipcMain.on('load_config', (event, arg) => {
-        fs.readFileSync('config.json', function(data) {
-            event.sender.send('config_loaded', data);
-        });
     });
 
     // Save Window Position
@@ -429,6 +457,26 @@ app.on('ready', () => {
         if (win) mainWindowState.saveState(win);
         if (bgwin) bgWindowState.saveState(bgwin);
     });
+
+    // Rebuild roon_bundle.js
+    ipcMain.on('rebuild_app', (event, arg) => {
+        nrc.run('npm run buld').then(function(exitCodes) {
+           console.log(exitCodes)
+           setTimeout(function(){
+               app.relaunch({args: process.argv.slice(1).concat(['--relaunch'])})
+               app.exit(0)
+           }, 5000)       
+      }, function(err) {
+        console.log('Command failed to run with error: ', err);
+      });
+    });
+
+    // Restart
+    ipcMain.on('restart_app', (event, arg) => {
+        app.relaunch({args: process.argv.slice(1).concat(['--relaunch'])})
+        app.exit(0)
+    });
+    
 });
 
 

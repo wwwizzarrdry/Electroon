@@ -4,8 +4,19 @@ var RoonApi          = require("node-roon-api"),
     RoonApiImage     = require('node-roon-api-image'),
     RoonApiBrowse    = require('node-roon-api-browse'),
     Vue              = require('vue'),
-    config           = require('./config/config.json'),
+    defaultConfig    = require('./config/config.json'),
+    config           = localStorage.getItem("config"),
     debug = false;
+
+if (config == null) {
+    localStorage.setItem("config", JSON.stringify(defaultConfig));
+    config = defaultConfig;
+} else {
+    config = JSON.parse(config);
+};
+
+console.log(config)
+
 
 // Initialize Services
 var core, roonstate;
@@ -19,14 +30,16 @@ var roon = new RoonApi({
     
     core_paired: function(core_) {
         core = core_;   
-        var roonstate = roon.load_config("roonstate");
+        var roonstate = config.roonstate;
         roonstate["display_name"] =  core.display_name;
         roonstate["display_version"] =  core.display_version;
         
         // Update model
         v.status = 'unauthorized';
         v.roonstate = roonstate;
-        v.current_zone_id = roon.load_config("current_zone_id");
+        v.server_ip = config.server_ip;
+        v.server_port = config.server_port;
+        v.current_zone_id = config.current_zone_id;
 
         core.services.RoonApiTransport.subscribe_zones((response, msg) => {
             if (response == "Subscribed") { 
@@ -76,7 +89,8 @@ var v = new Vue({
             list:            null,
             items:           [],
             paired:          false,
-            roonstate:       null
+            roonstate:       null,
+            view_settings:   false
         }
     }, 
     created: function(){
@@ -93,6 +107,23 @@ var v = new Vue({
                 $(data.css_selector).removeClass('draggable');
             }
         });
+        ipcRenderer.on('transport_req', (event, data) => {
+            console.log('\n\n\ntaskbar transport\n\n\n', data)
+            switch(data.control) {
+                case 'prev':
+                    this.transport_previous();
+                    break;
+                case 'play':
+                    this.transport_playpause();
+                    break;
+                case 'next':
+                    this.transport_next();
+                    break;
+            }
+        });
+        ipcRenderer.on('open_settings', (event, data) => {
+            this.view_settings = true;
+        });
     },
     computed: {
         zone: function () {
@@ -102,22 +133,61 @@ var v = new Vue({
     watch: {
         'roonstate': function(val, oldval){
             config.roonstate = val;
-            ipcRenderer.send('save_config', config);
+            roon.save_config("config", config);
+            //ipcRenderer.send('save_config', config);
         },
         'paired': function(val, oldval) {
             config.paired = val;
-            save_config(config);
+            roon.save_config("config", config);
         },
         'current_zone_id': function(val, oldval) {
-            roon.save_config("current_zone_id", val);
-            this.first_run = false;
             config.current_zone_id = val;
             config.my_settings.first_run = false;
-            save_config(config);
+            roon.save_config("config", config);
             refresh_browse();
+        },
+        'zones[current_zone_id].now_playing': function(val, oldval) {
+            var url = 'http://' + v.server_ip + ':' + v.server_port + '/api/image/' + v.zone.now_playing.image_key + '?scale=fit&width=500&height=500';
+            var options = {
+                directory: "art/",
+                filename: 'taskbar.png'
+            };
+
+            download(url, options, function(err){
+                if (err) throw err
+                ipcRenderer.send('nowPlaying', v.zone);
+            })
+
+            /* Save Dialog:  should begins with 'http' or 'file://' or '/'
+            saveFile('http://' + this.server_ip + ':' + this.server_port + '/api/image/' + this.zone.now_playing.image_key + '?scale=fit&width=100&height=100') 
+                .then(() => {
+                    console.log('saved');
+                    ipcRenderer.send('nowPlaying', this.zone);
+                }).catch(err => console.error(err.stack));
+            */
         }
     },
     methods: {
+        change_server_ip: function(event){
+            this.server_ip = $(event.target).val();
+        },
+        change_server_port: function(event){
+            this.server_port = $(event.target).val();
+        },
+        update_settings: function(val, oldval){
+            config.server_ip = this.server_ip;
+            config.server_port = this.server_port;
+            roon.save_config("config", config);  
+            this.view_settings = false;
+            ipcRenderer.send('rebuild_app', {
+                restart: true
+            });
+        },
+        cancel_settings: function(event){
+            this.server_ip = config.server_ip;
+            this.server_port = config.server_port;
+            this.view_settings = false;
+        },
         to_time: function (s) {
             let r = "";
             if (s >= 3600) {           
