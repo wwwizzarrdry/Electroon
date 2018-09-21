@@ -4,6 +4,10 @@
         "alwaystop": false,
         "darkTheme": true,
         "debug": false,
+        "dimensions": {
+            "width": 1920,
+            "height": 1080
+        },
         "eightball": [
             "With integrity and consistency -- your credits are piling up.",
             "Reach out your hand today to support others who need you.",
@@ -259,7 +263,7 @@
             "A problem clearly stated is a problem half solved.",
             "Accept your independence and use it wisely.",
             "May the warm winds of heaven blow softly upon your sprint."
-          ],
+        ],
         "first_run": true,
         "history": [],
         "last_album_key": "",
@@ -276,5 +280,5 @@
         "tokens": {}
     },
     "server_ip": "localhost",
-    "server_port": 9100
+    "server_port": "9100"
 }

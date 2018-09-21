@@ -1,0 +1,40 @@
+{
+    "current_zone_id": "",
+    "my_settings": {
+        "alwaystop": false,
+        "darkTheme": true,
+        "debug": false,
+        "eightball": [
+            "It is certain",
+            "It is decidedly so",
+            "Without a doubt",
+            "Yes – definitely",
+            "You may rely on it",
+            "As I see it, yes",
+            "Most likely",
+            "Outlook good",
+            "Yes",
+            "Signs point to yes",
+            "You can count on it",
+            "My sources say yes",
+            "Outlook is good",
+            "Very likely"
+        ],
+        "first_run": true,
+        "history": [],
+        "last_album_key": "",
+        "last_artist_key": "",
+        "start_minimized": false,
+        "user_profile": "",
+        "volume_control": "absolute"
+    },
+    "paired": false,
+    "roonstate": {
+        "display_name": "",
+        "display_version": "",
+        "paired_core_id": "",
+        "tokens": {}
+    },
+    "server_ip": "localhost",
+    "server_port": 9100
+}
