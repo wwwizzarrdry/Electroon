@@ -19,13 +19,12 @@ https://www.dropbox.com/s/mko2oad4kyjv0pt/Electroon-win32-x64.zip?dl=0
 3. npm run build
 4. npm start
 5. Authorize extension in Roon
+
 ```
 ### If you npm install electron-packager, you can use the following to make an executable. 
 *Once you edit your config.json, run electron-packer command from the project root directory
 ```
 npm run package-win-asar
-npm run package-mac
-npm run package-linux-asar
 ```
 Not sure how to package with the startup flags, but on Windows you can edit the .exe shortcut properties and append to the "target" like so:
 ```
